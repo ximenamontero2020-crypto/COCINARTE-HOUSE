@@ -10,27 +10,82 @@ export default function CallbackPage() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    const code = searchParams.get('code');
-    const next = searchParams.get('next');
+    let cancelled = false;
 
-    if (!code) {
-      setStatus('error');
-      setMessage('No se recibió un código de verificación.');
-      return;
-    }
-
-    supabase.auth.exchangeCodeForSession(code).then(({ data, error }) => {
-      if (error) {
-        setStatus('error');
-        setMessage(error.message);
-        return;
-      }
-      if ('redirectType' in data && data.redirectType === 'recovery') {
+    const finishOk = (redirectType?: string | null) => {
+      if (cancelled) return;
+      if (redirectType === 'recovery') {
         navigate('/auth/reset-password', { replace: true });
         return;
       }
-      navigate(validateOrdinaryPostAuthNext(next), { replace: true });
-    });
+      navigate(validateOrdinaryPostAuthNext(searchParams.get('next')), { replace: true });
+    };
+
+    const finishErr = (msg: string) => {
+      if (cancelled) return;
+      setStatus('error');
+      setMessage(msg);
+    };
+
+    const run = async () => {
+      const code = searchParams.get('code');
+      const tokenHash = searchParams.get('token_hash');
+      const type = searchParams.get('type');
+      const next = searchParams.get('next');
+
+      // PKCE / magic-link moderno: ?code=...
+      if (code) {
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) {
+          finishErr(error.message);
+          return;
+        }
+        const redirectType =
+          data && 'redirectType' in data ? (data.redirectType as string | undefined) : undefined;
+        finishOk(redirectType ?? (type === 'recovery' ? 'recovery' : null));
+        return;
+      }
+
+      // Enlaces antiguos / plantillas con token_hash
+      if (tokenHash && type) {
+        const { error } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: type as 'signup' | 'email' | 'recovery' | 'invite' | 'magiclink' | 'email_change',
+        });
+        if (error) {
+          finishErr(error.message);
+          return;
+        }
+        finishOk(type === 'recovery' ? 'recovery' : null);
+        return;
+      }
+
+      // Hash legacy (#access_token=...) — por si detectSessionInUrl está off
+      const hash = window.location.hash.replace(/^#/, '');
+      if (hash.includes('access_token')) {
+        const params = new URLSearchParams(hash);
+        const access_token = params.get('access_token');
+        const refresh_token = params.get('refresh_token');
+        if (access_token && refresh_token) {
+          const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+          if (error) {
+            finishErr(error.message);
+            return;
+          }
+          finishOk(params.get('type') === 'recovery' ? 'recovery' : null);
+          return;
+        }
+      }
+
+      finishErr(
+        'No se recibió un enlace de verificación válido. Abre el correo otra vez desde el mismo dispositivo, o pide un reenvío en Crear cuenta.',
+      );
+    };
+
+    void run();
+    return () => {
+      cancelled = true;
+    };
   }, [navigate, searchParams]);
 
   return (

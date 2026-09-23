@@ -45,7 +45,9 @@
     "dev": "vite",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "type-check": "tsc --noEmit --project tsconfig.app.json"
+    "type-check": "tsc --noEmit --project tsconfig.app.json",
+    "start": "npx --yes serve out -s -l tcp://0.0.0.0:$PORT",
+    "serve": "npx --yes serve out -s -l tcp://0.0.0.0:${PORT:-3000}"
   },
   "type": "module",
   "version": "0.0.0"

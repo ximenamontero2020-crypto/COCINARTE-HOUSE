@@ -66,7 +66,13 @@ export default function AuthPage() {
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: CALLBACK_URL },
+      options: {
+        emailRedirectTo: CALLBACK_URL,
+        data: {
+          name: name.trim() || undefined,
+          phone: phone.trim() || undefined,
+        },
+      },
     });
     setLoading(false);
     if (signUpError) {
@@ -112,7 +118,7 @@ export default function AuthPage() {
       setError(resendError.message);
       return;
     }
-    setInfo('Te reenviamos el código a tu correo.');
+    setInfo('Te reenviamos el correo de verificación. Revisa la bandeja y el spam.');
   };
 
   const handleForgot = async (e?: FormEvent) => {
@@ -293,17 +299,31 @@ export default function AuthPage() {
         )}
 
         {view === 'signup-code' && (
-          <CodeForm
-            title="Verifica tu correo"
-            subtitle={`Enviamos un código de 6 dígitos a ${email}. Ingresa el código para completar tu registro.`}
-            loading={loading}
-            onSubmit={handleVerifySignup}
-            onResend={handleResendSignup}
-            onChangeEmail={() => {
-              setView('register');
-              setError('');
-            }}
-          />
+          <div className="flex flex-col gap-4">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground-950">Verifica tu correo</h2>
+              <p className="mt-1 text-sm text-foreground-600">
+                Te enviamos un correo a <span className="font-medium text-foreground-900">{email}</span>.
+                Abre el <span className="font-medium">enlace de confirmación</span> desde este mismo
+                celular o computadora. Eso activa tu cuenta en Supabase.
+              </p>
+              <p className="mt-2 text-sm text-foreground-500">
+                Si el correo trae un código de 6 dígitos (no un enlace), escríbelo abajo.
+              </p>
+            </div>
+            <CodeForm
+              title=""
+              subtitle=""
+              loading={loading}
+              onSubmit={handleVerifySignup}
+              onResend={handleResendSignup}
+              onChangeEmail={() => {
+                setView('register');
+                setError('');
+              }}
+              compact
+            />
+          </div>
         )}
 
         {view === 'forgot' && (
@@ -441,6 +461,7 @@ function CodeForm({
   onSubmit,
   onResend,
   onChangeEmail,
+  compact,
 }: {
   title: string;
   subtitle: string;
@@ -448,6 +469,7 @@ function CodeForm({
   onSubmit: (token: string) => void;
   onResend: () => void;
   onChangeEmail: () => void;
+  compact?: boolean;
 }) {
   const [token, setToken] = useState('');
   return (
@@ -458,10 +480,12 @@ function CodeForm({
       }}
       className="flex flex-col gap-4"
     >
-      <div>
-        <h2 className="text-lg font-semibold text-foreground-950">{title}</h2>
-        <p className="mt-1 text-sm text-foreground-600">{subtitle}</p>
-      </div>
+      {!compact && (title || subtitle) && (
+        <div>
+          {title ? <h2 className="text-lg font-semibold text-foreground-950">{title}</h2> : null}
+          {subtitle ? <p className="mt-1 text-sm text-foreground-600">{subtitle}</p> : null}
+        </div>
+      )}
       <input
         type="text"
         inputMode="numeric"

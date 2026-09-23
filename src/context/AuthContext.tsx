@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export type Profile = {
   name: string | null;
@@ -56,6 +56,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshProfile = useCallback(async () => {
+    if (!isSupabaseConfigured) {
+      setProfile(null);
+      return;
+    }
     const {
       data: { session: current },
     } = await supabase.auth.getSession();
@@ -72,6 +76,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setSession(null);
+      setProfile(null);
+      setLoading(false);
+      return;
+    }
+
     let active = true;
 
     const init = async () => {
@@ -114,14 +125,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       if (newSession?.user) {
-        supabase
-          .from('profiles')
-          .select('name, phone, email, membership_level, membership_current_spend')
-          .eq('id', newSession.user.id)
-          .maybeSingle()
-          .then(({ data: profileData }) => {
-            if (active) setProfile(profileData ?? null);
-          });
+        void (async () => {
+          await ensureProfile(newSession.user);
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('name, phone, email, membership_level, membership_current_spend')
+            .eq('id', newSession.user.id)
+            .maybeSingle();
+          if (active) setProfile(profileData ?? null);
+        })();
       } else {
         setProfile(null);
       }
@@ -134,11 +146,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [ensureProfile]);
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    if (isSupabaseConfigured) {
+      await supabase.auth.signOut();
+    }
     setProfile(null);
   }, []);
 
   const user = session?.user ?? null;
+
+  if (!isSupabaseConfigured) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background-50 px-6">
+        <div className="max-w-md rounded-2xl border border-background-200 bg-white p-6 shadow-sm">
+          <h1 className="font-heading text-xl font-extrabold text-foreground-950">
+            Configuración incompleta
+          </h1>
+          <p className="mt-3 text-sm text-foreground-700 leading-relaxed">
+            Faltan las variables de entorno de Supabase en el build (
+            <code className="text-xs">VITE_PUBLIC_SUPABASE_URL</code> y{' '}
+            <code className="text-xs">VITE_PUBLIC_SUPABASE_ANON_KEY</code>
+            ). Configúralas en Railway y vuelve a desplegar.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider
