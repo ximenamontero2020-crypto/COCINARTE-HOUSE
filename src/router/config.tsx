@@ -18,6 +18,7 @@ import StaffHubPage from "@/pages/staff/StaffHubPage";
 import AuditoriaPage from "@/pages/staff/AuditoriaPage";
 import InsightsPage from "@/pages/staff/InsightsPage";
 import ProveedoresPage from "@/pages/staff/ProveedoresPage";
+import MenuEfectivoPage from "@/pages/staff/MenuEfectivoPage";
 
 // Lazy: Recharts solo se descarga al abrir /staff/pareto.
 const ParetoPage = lazy(() => import("@/pages/staff/ParetoPage"));
@@ -71,6 +72,10 @@ const routes: RouteObject[] = [
       {
         path: "proveedores",
         element: <ProveedoresPage />,
+      },
+      {
+        path: "menu-efectivo",
+        element: <MenuEfectivoPage />,
       },
       {
         path: "pareto",

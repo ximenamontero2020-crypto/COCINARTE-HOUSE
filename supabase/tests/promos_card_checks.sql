@@ -15,6 +15,10 @@ SELECT public.preview_promo((public.get_my_promo()->>'code'), 100);  -- esperado
 SELECT public.preview_promo((public.get_my_promo()->>'code'), 300);  -- esperado: discount 30, final_total 270
 -- 20 unidades del platillo más barato: total >= $250.
 -- 'caja' requiere que ese platillo tenga pago_en_caja_permitido = true (ver 20260924000009).
+SET LOCAL ROLE postgres;
+UPDATE public.menu_items SET pago_en_caja_permitido = true
+WHERE id = (SELECT id FROM public.menu_items ORDER BY substring(price FROM '[0-9]+')::int LIMIT 1);
+SET LOCAL ROLE authenticated;
 CREATE TEMP TABLE t_comanda ON COMMIT DROP AS
 SELECT public.create_comanda(
   jsonb_build_array(jsonb_build_object(

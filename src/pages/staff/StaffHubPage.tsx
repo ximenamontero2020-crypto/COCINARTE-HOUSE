@@ -8,6 +8,7 @@ const MODULES: Module[] = [
   { title: 'Estado de cafetería', desc: 'Semáforo de la fila y pedidos pendientes por entregar.', icon: 'ri-traffic-light-line', to: '/staff/cafeteria-status' },
   { title: 'Almacén digital', desc: 'Stock de insumos, mínimos y recetas por platillo.', icon: 'ri-archive-2-line', to: '/staff/almacen' },
   { title: 'Corte de caja', desc: 'Apertura, movimientos de efectivo y cierre del día.', icon: 'ri-cash-line', to: '/staff/corte-caja' },
+  { title: 'Pago en efectivo', desc: 'Productos listos que se pueden pagar en caja al recoger.', icon: 'ri-money-dollar-circle-line', to: '/staff/menu-efectivo' },
   { title: 'Datos curiosos', desc: 'Contenido que ven los clientes en la app.', icon: 'ri-lightbulb-line', to: '/staff/fun-facts' },
   { title: 'Proveedores', desc: 'Proveedores por insumo y alerta diaria de stock bajo.', icon: 'ri-truck-line', to: '/staff/proveedores' },
   { title: 'Insights', desc: 'Franjas más concurridas y qué se pide en ellas.', icon: 'ri-line-chart-line', to: '/staff/insights' },

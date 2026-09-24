@@ -9,6 +9,7 @@ const NAV = [
   { to: '/staff/almacen', label: 'Almacén' },
   { to: '/staff/proveedores', label: 'Proveedores' },
   { to: '/staff/corte-caja', label: 'Corte' },
+  { to: '/staff/menu-efectivo', label: 'Efectivo' },
   { to: '/staff/fun-facts', label: 'Fun facts' },
   { to: '/staff/insights', label: 'Insights' },
   { to: '/staff/pareto', label: 'Pareto' },

@@ -7,6 +7,7 @@ import SuccessScreen from './components/SuccessScreen';
 import type { OrderInfo } from '@/pages/checkout/types';
 import { crearComanda } from '@/utils/orders';
 import { track } from '@/lib/analytics';
+import { supabase } from '@/lib/supabase';
 
 export default function Checkout() {
   const { items, clear } = useCart();
@@ -28,7 +29,28 @@ export default function Checkout() {
   };
 
   // Efectivo solo si ningún producto requiere preparación (ver PaymentMethod en types.ts).
-  const cashAllowed = items.every((i) => i.pagoEnCajaPermitido);
+  // Se relee de menu_items: el carrito puede traer el dato viejo o venir de una recomendación
+  // que no lo incluye. Mientras carga o si falla, el efectivo queda bloqueado.
+  const itemIds = items.map((i) => i.menuItemId).filter((id): id is number => id !== undefined);
+  const idsKey = [...new Set(itemIds)].sort((a, b) => a - b).join(',');
+  const [cashFlags, setCashFlags] = useState<Map<number, boolean>>(new Map());
+  useEffect(() => {
+    if (!idsKey) return;
+    let active = true;
+    void supabase
+      .from('menu_items')
+      .select('id, pago_en_caja_permitido')
+      .in('id', idsKey.split(',').map(Number))
+      .then(({ data, error }) => {
+        if (error) console.error('Error leyendo pago en efectivo:', error);
+        if (active) setCashFlags(new Map((data ?? []).map((r) => [r.id as number, r.pago_en_caja_permitido === true])));
+      });
+    return () => {
+      active = false;
+    };
+  }, [idsKey]);
+  const cashAllowed =
+    items.length > 0 && items.every((i) => i.menuItemId !== undefined && cashFlags.get(i.menuItemId) === true);
 
   // Una vez por visita al checkout, solo si hay algo en el carrito.
   const checkoutTracked = useRef(false);
