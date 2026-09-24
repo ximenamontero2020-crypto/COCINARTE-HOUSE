@@ -7,7 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-const STAFF_EMAIL = 'ximenamontero2020@gmail.com';
 const GEMINI_MODEL = 'gemini-3.6-flash';
 
 type StaffChatRequest = {
@@ -76,10 +75,12 @@ serve(async (req) => {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     });
     const { data: userData, error: userError } = await supabase.auth.getUser(token);
-    const normalizedEmail = userData.user?.email?.trim().toLowerCase();
+    const { data: profile, error: profileError } = userData.user
+      ? await supabase.from('profiles').select('role').eq('id', userData.user.id).maybeSingle()
+      : { data: null, error: null };
 
-    if (userError || normalizedEmail !== STAFF_EMAIL) {
-      console.error('Acceso rechazado para staff-chatbot:', userError?.message ?? 'correo no autorizado');
+    if (userError || profileError || (profile?.role !== 'staff' && profile?.role !== 'admin')) {
+      console.error('Acceso rechazado para staff-chatbot:', userError?.message ?? profileError?.message ?? 'rol no autorizado');
       return jsonResponse({ error: 'No autorizado.' }, 403);
     }
 

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -13,9 +13,29 @@ import SuggestionsList from './components/SuggestionsList';
 import FinalVote from './components/FinalVote';
 import FunFactWidget from './components/FunFactWidget';
 import PersonalRecommendations from './components/PersonalRecommendations';
+import CampusWeather from './components/CampusWeather';
+import { track } from '@/lib/analytics';
 
 export default function Home() {
   const location = useLocation();
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // view_menu: una vez por visita, cuando al menos 25% del menú entra en pantalla.
+  useEffect(() => {
+    const el = menuRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          track('view_menu');
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.25 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const hash = window.location.hash || location.hash;
@@ -47,8 +67,11 @@ export default function Home() {
       <CafeteriaStatus />
       <FunFactWidget />
       <Hamburger3D />
+      <CampusWeather />
       <PersonalRecommendations />
-      <MenuSection />
+      <div ref={menuRef}>
+        <MenuSection />
+      </div>
       <ValuesSection />
       <section id="propuestas" className="w-full bg-background-100 px-4 py-20 md:px-6 md:py-28">
         <div className="mx-auto max-w-6xl">

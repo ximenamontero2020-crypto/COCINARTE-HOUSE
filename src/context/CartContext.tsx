@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { track } from '@/lib/analytics';
 
 export type CartItem = {
   key: string;
@@ -50,6 +51,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [items]);
 
   const addItem = (item: NewCartItem) => {
+    track('add_to_cart', { menu_item_id: item.menuItemId, category: item.categoryId, value: item.priceValue });
     setItems((prev) => {
       const existing = prev.find((i) => i.key === item.key);
       if (existing) {

@@ -1,51 +1,34 @@
 import { useEffect, useState } from 'react';
+import { getCampusWeather } from '@/lib/weather';
+import { resolveRule, type Weather, type WeatherRule } from '@/lib/weatherRules';
 
-export type ClimaTipo = 'caluroso' | 'lluvioso' | 'templado' | null;
-
-const LATITUDE = 17.9869;
-const LONGITUDE = -92.9303;
-const OPEN_METEO_URL = `https://api.open-meteo.com/v1/forecast?latitude=${LATITUDE}&longitude=${LONGITUDE}&current=temperature_2m,precipitation&timezone=America/Mexico_City`;
-
+/**
+ * Clima real del campus (Open-Meteo, caché de 20 min) y la regla de menú activa.
+ * Si el clima no está disponible: weather = null, unavailable = true y rule = 'mild' (más vendidos).
+ */
 export function useClimaRecomendado() {
-  const [clima, setClima] = useState<ClimaTipo>(null);
+  const [weather, setWeather] = useState<Weather | null>(null);
   const [cargando, setCargando] = useState(true);
+  const [unavailable, setUnavailable] = useState(false);
 
   useEffect(() => {
     let activo = true;
-
-    const cargarClima = async () => {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-        const res = await fetch(OPEN_METEO_URL, { signal: controller.signal });
-        clearTimeout(timeoutId);
-        if (!res.ok) throw new Error('Respuesta de Open-Meteo no válida');
-
-        const data = await res.json();
-        const temperatura = data?.current?.temperature_2m;
-        const precipitacion = data?.current?.precipitation;
-
-        if (!activo) return;
-
-        if (typeof temperatura === 'number' && temperatura >= 30) {
-          setClima('caluroso');
-        } else if (typeof precipitacion === 'number' && precipitacion > 0) {
-          setClima('lluvioso');
-        } else {
-          setClima('templado');
-        }
-      } catch (error) {
+    getCampusWeather()
+      .then((result) => {
+        if (activo) setWeather(result);
+      })
+      .catch((error) => {
         console.error('No se pudo obtener el clima:', error);
-        if (activo) setClima(null);
-      } finally {
+        if (activo) setUnavailable(true);
+      })
+      .finally(() => {
         if (activo) setCargando(false);
-      }
+      });
+    return () => {
+      activo = false;
     };
-
-    void cargarClima();
-    return () => { activo = false; };
   }, []);
 
-  return { clima, cargando };
+  const rule: WeatherRule = resolveRule(weather);
+  return { weather, rule, cargando, unavailable };
 }

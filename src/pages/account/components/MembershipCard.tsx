@@ -1,5 +1,5 @@
 import CocinArteCard from '@/components/CocinArteCard';
-import { MEMBERSHIP_LEVELS, normalizeMembershipLevel } from '@/components/membership';
+import { MEMBERSHIP_LEVELS, membershipProgress, normalizeMembershipLevel } from '@/components/membership';
 import { useAuth } from '@/context/AuthContext';
 
 const currencyFormatter = new Intl.NumberFormat('es-MX', {
@@ -8,23 +8,13 @@ const currencyFormatter = new Intl.NumberFormat('es-MX', {
   maximumFractionDigits: 2,
 });
 
-const nextLevelConfig = {
-  sin_nivel: { label: 'Bronce', start: 0, target: 499 },
-  bronce: { label: 'Plata', start: 499, target: 799 },
-  plata: { label: 'Oro', start: 799, target: 1500 },
-};
-
 export default function MembershipCard() {
   const { profile } = useAuth();
   const level = normalizeMembershipLevel(profile?.membership_level);
   const spend = Math.max(0, Number(profile?.membership_current_spend ?? 0));
   const visual = MEMBERSHIP_LEVELS[level];
   const holderName = profile?.name?.trim() || profile?.email?.split('@')[0] || 'Cliente CocinArte';
-  const nextLevel = level === 'oro' ? null : nextLevelConfig[level];
-  const remaining = nextLevel ? Math.max(0, nextLevel.target - spend) : 0;
-  const progress = nextLevel
-    ? Math.min(100, Math.max(0, ((spend - nextLevel.start) / (nextLevel.target - nextLevel.start)) * 100))
-    : 100;
+  const { next: nextLevel, remaining, percent: progress } = membershipProgress(level, spend);
 
   return (
     <section aria-labelledby="membership-card-title">
