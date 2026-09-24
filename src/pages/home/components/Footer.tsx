@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 const schedule = [
   { day: 'Lunes a Viernes', hours: '7:00 — 21:00' },
   { day: 'Sábado', hours: '8:00 — 18:00' },
@@ -70,6 +72,16 @@ export default function Footer() {
         <div className="mt-12 pt-6 border-t border-background-50/15 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-background-50/60">
           <p>© {new Date().getFullYear()} COCINARTE HOUSE. Todos los derechos reservados.</p>
           <p>Hecho con cariño para la comunidad Tecmilenio.</p>
+        </div>
+        {/* Acceso discreto al panel de staff; StaffLayout valida el rol. */}
+        <div className="mt-4 flex justify-center">
+          <Link
+            to="/staff/login"
+            className="inline-flex items-center gap-1 text-[10px] text-background-50/30 hover:text-background-50/70 transition-colors"
+          >
+            <i className="ri-lock-line" aria-hidden="true"></i>
+            Administración
+          </Link>
         </div>
       </div>
     </footer>
