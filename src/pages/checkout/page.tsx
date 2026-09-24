@@ -1,25 +1,36 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
 import CartList from './components/CartList';
 import PaymentMethods from './components/PaymentMethods';
 import SuccessScreen from './components/SuccessScreen';
-import type { OrderInfo } from '@/pages/checkout/types';
-import { guardarComanda } from '@/utils/orders';
+import type { OrderInfo, PaymentMethod } from '@/pages/checkout/types';
+import { crearComanda } from '@/utils/orders';
+import { track } from '@/lib/analytics';
+
 export default function Checkout() {
   const { items, clear } = useCart();
   const navigate = useNavigate();
   const [order, setOrder] = useState<OrderInfo | null>(null);
 
-  const handleSuccess = async (info: OrderInfo) => {
-    try {
-      await guardarComanda(info, items);
-    } catch (err) {
-      console.error('No se pudo guardar el pedido:', err);
-    }
-    setOrder(info);
+  // Si create_comanda falla, el error sube al panel de pago y no se confirma nada.
+  const handleConfirm = async (method: PaymentMethod) => {
+    const comanda = await crearComanda(items, method);
+    track('place_order', { method, value: comanda.total, item_count: items.reduce((n, i) => n + i.quantity, 0) });
+    setOrder({ orderNumber: comanda.numero_pedido, method, total: comanda.total });
     clear();
   };
+
+  // Una vez por visita al checkout, solo si hay algo en el carrito.
+  const checkoutTracked = useRef(false);
+  useEffect(() => {
+    if (checkoutTracked.current || order || items.length === 0) return;
+    checkoutTracked.current = true;
+    track('begin_checkout', {
+      item_count: items.reduce((n, i) => n + i.quantity, 0),
+      value: items.reduce((s, i) => s + i.priceValue * i.quantity, 0),
+    });
+  }, [items, order]);
 
   const goToMenu = () => {
     navigate('/#menu');
@@ -106,7 +117,7 @@ export default function Checkout() {
                 <CartList />
               </div>
               <div className="lg:col-span-2">
-                <PaymentMethods onSuccess={handleSuccess} />
+                <PaymentMethods onConfirm={handleConfirm} />
               </div>
             </div>
           </>

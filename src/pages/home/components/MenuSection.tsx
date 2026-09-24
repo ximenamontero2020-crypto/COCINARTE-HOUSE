@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { MenuCategory, MenuItem } from '@/mocks/menu';
 import { supabase } from '@/lib/supabase';
 import { useClimaRecomendado } from '@/hooks/useClimaRecomendado';
-import { mensajeBanner } from '@/utils/climaRecomendacion';
+import { RULE_COPY } from '@/lib/weatherRules';
 import DishCard from './DishCard';
 
 type MenuCategoryRow = {
@@ -57,8 +57,8 @@ const mapMenuCategory = (category: MenuCategoryRow, items: MenuItemRow[]): MenuC
 });
 
 export default function MenuSection() {
-  const { clima } = useClimaRecomendado();
-  const bannerClima = mensajeBanner(clima);
+  const { rule, weather } = useClimaRecomendado();
+  const bannerClima = weather && rule !== 'mild' ? `${RULE_COPY[rule].title} (${Math.round(weather.temperature)}°C): ${RULE_COPY[rule].message}` : null;
   const [menuCategories, setMenuCategories] = useState<MenuCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');

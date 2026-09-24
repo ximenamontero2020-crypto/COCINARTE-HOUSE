@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent } from 'react';
 import { usePromoLimit } from '@/hooks/usePromoLimit';
+import { track } from '@/lib/analytics';
 
 type Status = 'idle' | 'playing' | 'gameover';
 
@@ -89,6 +90,7 @@ export default function LluviaEspressoGame() {
 
   const startGame = () => {
     if (!canPlay) return;
+    track('play_game', { game: 'lluvia_espresso' });
     cupXRef.current = CANVAS_W / 2 - CUP_W / 2;
     dropsRef.current = [];
     framesRef.current = 0;
@@ -114,6 +116,8 @@ export default function LluviaEspressoGame() {
     const finish = () => {
       cancelAnimationFrame(raf);
       const { wonPct, totalPct, code } = awardWin(scoreToDiscount(scoreRef.current));
+      // Sin el código: es un cupón canjeable, no debe salir a analítica.
+      track('claim_promo', { game: 'lluvia_espresso', score: scoreRef.current, won_pct: wonPct, total_pct: totalPct });
       setDiscount({ pct: wonPct, code, totalPct });
       setStatus('gameover');
     };

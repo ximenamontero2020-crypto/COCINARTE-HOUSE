@@ -1,4 +1,4 @@
-export type PaymentMethod = 'tarjeta' | 'cafeteria';
+export type PaymentMethod = 'caja' | 'cafeteria';
 
 export type OrderInfo = {
   orderNumber: string;

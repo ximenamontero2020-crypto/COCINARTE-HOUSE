@@ -6,6 +6,7 @@ import { CartProvider } from "./context/CartContext";
 import { AuthProvider } from "./context/AuthContext";
 import BackgroundMusic from "./components/BackgroundMusic";
 import ChatbotWidget from "./components/ChatbotWidget";
+import WhatsAppFab from "./components/WhatsAppFab";
 
 function PublicChatbot() {
   const { pathname } = useLocation();
@@ -23,6 +24,7 @@ function App() {
             <BackgroundMusic />
             <AppRoutes />
             <PublicChatbot />
+            <WhatsAppFab />
           </CartProvider>
         </AuthProvider>
       </BrowserRouter>

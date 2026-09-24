@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { MEMBERSHIP_LEVELS, normalizeMembershipLevel } from '@/components/membership';
+import CafeteriaNotice from '@/components/CafeteriaNotice';
 
 const links = [
   { href: '#hero', label: 'Inicio' },
@@ -156,6 +157,8 @@ export default function Navbar() {
           </button>
         </div>
       </nav>
+      {/* Aviso del semáforo (cerrado / fila alta); en realtime vía useCafeteriaStatus. */}
+      <CafeteriaNotice />
 
       {open && (
         <div className="md:hidden px-4 pb-4 bg-background-50 border-b border-background-200/70">

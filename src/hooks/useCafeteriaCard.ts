@@ -1,46 +1,34 @@
 import { useCallback, useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 
 type CafeteriaCard = {
   number: string;
   balance: number;
 };
 
-const STORAGE_KEY = 'cocinarte_card';
-
-function generateNumber(): string {
-  const digits = Array.from({ length: 12 }, () => Math.floor(Math.random() * 10)).join('');
-  const grouped = digits.match(/.{1,4}/g)?.join('-') ?? digits;
-  return `COC ${grouped}`;
-}
-
-function loadCard(): CafeteriaCard {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as CafeteriaCard;
-  } catch {
-    // ignorar
-  }
-  return { number: generateNumber(), balance: 0 };
-}
-
+/**
+ * Saldo de la Tarjeta CocinArte leído del servidor (RPC get_card_balance).
+ * Las recargas se hacen en caja con el staff; el cobro ocurre dentro de
+ * create_comanda. Aquí solo se lee.
+ */
 export function useCafeteriaCard() {
-  const [card, setCard] = useState<CafeteriaCard>(loadCard);
+  const [card, setCard] = useState<CafeteriaCard | null>(null);
+  const [error, setError] = useState('');
+
+  const refresh = useCallback(async () => {
+    const { data, error: rpcError } = await supabase.rpc('get_card_balance');
+    if (rpcError) {
+      console.error('Error cargando saldo:', rpcError);
+      setError('No se pudo cargar tu saldo.');
+      return;
+    }
+    setError('');
+    setCard({ number: data.card_number, balance: Number(data.balance) });
+  }, []);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(card));
-    } catch {
-      // almacenamiento no disponible
-    }
-  }, [card]);
+    void refresh();
+  }, [refresh]);
 
-  const recharge = useCallback((amount: number) => {
-    setCard((prev) => ({ ...prev, balance: prev.balance + amount }));
-  }, []);
-
-  const spend = useCallback((amount: number) => {
-    setCard((prev) => ({ ...prev, balance: Math.max(0, prev.balance - amount) }));
-  }, []);
-
-  return { card, recharge, spend };
+  return { card, error, refresh };
 }

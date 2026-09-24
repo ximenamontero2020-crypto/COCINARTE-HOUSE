@@ -6,16 +6,18 @@ import type { OrderInfo } from '@/pages/checkout/types';
 
 const METHOD_DETAIL: Record<
   OrderInfo['method'],
-  { icon: string; title: string; hint: string }
+  { icon: string; title: string; totalLabel: string; hint: string }
 > = {
-  tarjeta: {
-    icon: 'ri-bank-card-line',
-    title: 'Pago con tarjeta',
-    hint: 'El cargo se procesó correctamente.',
+  caja: {
+    icon: 'ri-store-2-line',
+    title: 'Pago en caja',
+    totalLabel: 'Total a pagar en caja',
+    hint: 'Tu pedido se paga al recoger. Menciona tu número de pedido en caja.',
   },
   cafeteria: {
     icon: 'ri-bank-card-2-line',
     title: 'Tarjeta Cocinarte',
+    totalLabel: 'Total pagado',
     hint: 'El saldo fue descontado de tu tarjeta.',
   },
 };
@@ -44,7 +46,7 @@ export default function SuccessScreen({ order }: { order: OrderInfo }) {
           </div>
         </div>
         <div className="mt-5 flex items-center justify-between border-t border-background-200/70 pt-4">
-          <span className="text-sm text-foreground-600">Total pagado</span>
+          <span className="text-sm text-foreground-600">{d.totalLabel}</span>
           <span className="font-heading font-bold text-xl text-foreground-950">
             {formatPrice(order.total)}
           </span>

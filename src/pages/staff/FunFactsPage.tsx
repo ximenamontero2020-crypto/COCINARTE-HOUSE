@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { isStaffEmail } from '@/config/staff';
 import { supabase } from '@/lib/supabase';
 
 type FunFact = {
@@ -46,14 +45,14 @@ export default function FunFactsPage() {
   };
 
   useEffect(() => {
-    if (!authLoading && user && isStaffEmail(user.email)) void loadFacts();
+    if (!authLoading && user) void loadFacts();
   }, [authLoading, user]);
 
   if (authLoading) {
     return <div className="flex min-h-screen items-center justify-center bg-background-50 text-sm text-foreground-600">Cargando…</div>;
   }
 
-  if (!user || !isStaffEmail(user.email)) return <Navigate to="/" replace />;
+  if (!user) return <Navigate to="/" replace />;
 
   const addFact = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

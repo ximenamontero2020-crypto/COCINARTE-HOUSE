@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import ShareSuggestion from './ShareSuggestion';
 
 const BUCKET = 'community';
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -14,7 +15,7 @@ export default function SuggestFood() {
   const [preview, setPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [created, setCreated] = useState<{ id: number; nombre: string } | null>(null);
 
   const selectFile = (selected: File | null) => {
     if (!selected) return;
@@ -43,7 +44,7 @@ export default function SuggestFood() {
 
     setSaving(true);
     setError(null);
-    setSuccess(false);
+    setCreated(null);
     let imagePath: string | null = null;
 
     try {
@@ -59,13 +60,17 @@ export default function SuggestFood() {
       const imageUrl = imagePath
         ? supabase.storage.from(BUCKET).getPublicUrl(imagePath).data.publicUrl
         : null;
-      const { error: insertError } = await supabase.from('food_suggestions').insert({
-        user_id: user.id,
-        nombre: trimmedName.slice(0, 100),
-        descripcion: trimmedDescription.slice(0, 300),
-        imagen_url: imageUrl,
-        status: 'pendiente',
-      });
+      const { data: inserted, error: insertError } = await supabase
+        .from('food_suggestions')
+        .insert({
+          user_id: user.id,
+          nombre: trimmedName.slice(0, 100),
+          descripcion: trimmedDescription.slice(0, 300),
+          imagen_url: imageUrl,
+          status: 'pendiente',
+        })
+        .select('id, nombre')
+        .single();
       if (insertError) {
         if (imagePath) await supabase.storage.from(BUCKET).remove([imagePath]);
         throw insertError;
@@ -77,7 +82,7 @@ export default function SuggestFood() {
       if (preview) URL.revokeObjectURL(preview);
       setPreview(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
-      setSuccess(true);
+      setCreated(inserted as { id: number; nombre: string });
     } catch (submitError) {
       console.error('Error creando propuesta de alimento:', submitError);
       setError('No pudimos enviar tu propuesta. Inténtalo de nuevo.');
@@ -131,7 +136,12 @@ export default function SuggestFood() {
       </div>
 
       {error && <p className="mt-3 text-sm text-accent-700">{error}</p>}
-      {success && <p className="mt-3 text-sm font-semibold text-primary-700">Propuesta enviada. Ahora está pendiente de revisión.</p>}
+      {created && (
+        <>
+          <p className="mt-3 text-sm font-semibold text-primary-700">Propuesta enviada. Ya aparece en las propuestas; ¡consigue votos!</p>
+          <ShareSuggestion id={created.id} nombre={created.nombre} />
+        </>
+      )}
       <button type="button" disabled={saving} onClick={() => void submit()} className="mt-5 inline-flex items-center gap-2 rounded-md bg-primary-500 px-5 py-3 text-sm font-semibold text-background-50 transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50">
         <i className={saving ? 'ri-loader-4-line animate-spin' : 'ri-send-plane-2-fill'} />
         {saving ? 'Enviando…' : 'Enviar propuesta'}

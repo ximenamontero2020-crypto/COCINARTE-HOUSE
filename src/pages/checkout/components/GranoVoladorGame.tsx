@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { usePromoLimit } from '@/hooks/usePromoLimit';
+import { track } from '@/lib/analytics';
 
 type Status = 'idle' | 'playing' | 'gameover';
 
@@ -140,6 +141,7 @@ export default function GranoVoladorGame() {
 
   const startGame = () => {
     if (!canPlay) return;
+    track('play_game', { game: 'grano_volador' });
     beanYRef.current = 150;
     velocityRef.current = 0;
     pipesRef.current = [];
@@ -236,6 +238,8 @@ export default function GranoVoladorGame() {
     const finish = () => {
       cancelAnimationFrame(raf);
       const { wonPct, totalPct, code } = awardWin(scoreToDiscount(scoreRef.current));
+      // Sin el código: es un cupón canjeable, no debe salir a analítica.
+      track('claim_promo', { game: 'grano_volador', score: scoreRef.current, won_pct: wonPct, total_pct: totalPct });
       setDiscount({ pct: wonPct, code, totalPct });
       setStatus('gameover');
     };
