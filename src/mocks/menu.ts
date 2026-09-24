@@ -14,6 +14,7 @@ export type MenuItem = {
   image: string;
   nutrition: NutritionInfo;
   allergens: string[];
+  pago_en_caja_permitido?: boolean;
 };
 
 export type MenuCategory = {

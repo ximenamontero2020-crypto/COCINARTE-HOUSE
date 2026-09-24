@@ -2,20 +2,36 @@ import { useState } from 'react';
 import { useCart } from '@/context/CartContext';
 import { formatPrice } from '@/utils/price';
 import CafeteriaCardPanel from './CafeteriaCardPanel';
+import MockGatewayForm from './MockGatewayForm';
 import type { PaymentMethod } from '@/pages/checkout/types';
 import PopularRecommendations from './PopularRecommendations';
 import CafeteriaNotice from '@/components/CafeteriaNotice';
 import { useCafeteriaStatus } from '@/hooks/useCafeteriaStatus';
+import { MOCK_GATEWAY_ENABLED } from '@/lib/payments/mockGateway';
 
 const METHODS: { id: PaymentMethod; label: string; desc: string; icon: string }[] = [
-  { id: 'caja', label: 'Pagar en caja', desc: 'Efectivo al recoger tu pedido', icon: 'ri-store-2-line' },
   { id: 'cafeteria', label: 'Tarjeta Cocinarte', desc: 'Paga con tu saldo', icon: 'ri-bank-card-2-line' },
+  // Prototipo: en producción solo aparece con VITE_PUBLIC_ENABLE_MOCK_GATEWAY=true.
+  ...(MOCK_GATEWAY_ENABLED
+    ? [{ id: 'pasarela' as const, label: 'Tarjeta de crédito o débito', desc: 'Prototipo · no se realiza ningún cobro', icon: 'ri-secure-payment-line' }]
+    : []),
+  { id: 'caja', label: 'Pagar en caja', desc: 'Efectivo al recoger · solo productos listos', icon: 'ri-store-2-line' },
 ];
+
+// Efectivo solo si nada requiere preparación: si algo que se prepara se paga al recoger y el
+// cliente no llega, la comida se desperdicia. El servidor (create_comanda) aplica la misma regla.
+const CASH_BLOCKED_REASON =
+  'Tu carrito tiene productos que se preparan al momento. Paga con tu tarjeta CocinArte o con tarjeta.';
 
 export default function PaymentMethods({
   onConfirm,
+  onMockPaid,
+  cashAllowed,
 }: {
-  onConfirm: (method: PaymentMethod) => Promise<void>;
+  onConfirm: (method: 'cafeteria' | 'caja') => Promise<void>;
+  // Solo muestra la pantalla de demostración: la pasarela nunca crea pedidos.
+  onMockPaid: (reference: string) => void;
+  cashAllowed: boolean;
 }) {
   const { total } = useCart();
   const [method, setMethod] = useState<PaymentMethod | null>(null);
@@ -25,7 +41,7 @@ export default function PaymentMethods({
   const { closed } = useCafeteriaStatus();
   const blocked = submitting || closed;
 
-  const confirm = async (m: PaymentMethod) => {
+  const confirm = async (m: 'cafeteria' | 'caja') => {
     if (blocked) return;
     setError('');
     setSubmitting(true);
@@ -51,15 +67,19 @@ export default function PaymentMethods({
       <div className="mt-5 grid gap-3">
         {METHODS.map((m) => {
           const active = method === m.id;
+          const disabled = m.id === 'caja' && !cashAllowed;
           return (
             <button
               key={m.id}
               type="button"
+              disabled={disabled}
               onClick={() => {
                 setMethod(m.id);
                 setError('');
               }}
-              className={`flex items-center gap-4 rounded-xl border p-4 text-left transition-colors cursor-pointer whitespace-nowrap ${
+              className={`flex items-center gap-4 rounded-xl border p-4 text-left transition-colors ${
+                disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+              } ${
                 active
                   ? 'border-primary-400 bg-primary-100/60'
                   : 'border-background-200/70 bg-background-50 hover:bg-background-100'
@@ -75,6 +95,12 @@ export default function PaymentMethods({
               <span className="flex-1">
                 <span className="block font-semibold text-foreground-950 text-sm">{m.label}</span>
                 <span className="block text-xs text-foreground-500">{m.desc}</span>
+                {disabled && (
+                  <span className="mt-1 flex items-start gap-1 text-xs text-accent-700">
+                    <i className="ri-information-line mt-px"></i>
+                    <span>{CASH_BLOCKED_REASON}</span>
+                  </span>
+                )}
               </span>
               <span
                 className={`w-5 h-5 flex items-center justify-center rounded-full border-2 ${
@@ -96,11 +122,11 @@ export default function PaymentMethods({
       )}
 
       <div className="mt-5">
-        {method === 'caja' && (
+        {method === 'caja' && cashAllowed && (
           <div className="space-y-4">
             <p className="text-sm text-foreground-600 flex items-start gap-2">
               <i className="ri-information-line mt-0.5 text-foreground-500"></i>
-              <span>Tu pedido se paga al recoger. No se hace ningún cargo en línea.</span>
+              <span>Todos tus productos están listos: pagas en efectivo al recogerlos. No se hace ningún cargo en línea.</span>
             </p>
             <button
               type="button"
@@ -122,12 +148,9 @@ export default function PaymentMethods({
             submitting={submitting}
             closed={closed}
             onPay={() => confirm('cafeteria')}
-            onChooseCaja={() => {
-              setMethod('caja');
-              setError('');
-            }}
           />
         )}
+        {method === 'pasarela' && MOCK_GATEWAY_ENABLED && <MockGatewayForm total={total} onSuccess={onMockPaid} />}
       </div>
     </div>
   );

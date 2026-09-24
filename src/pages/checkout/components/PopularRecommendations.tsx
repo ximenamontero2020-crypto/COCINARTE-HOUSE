@@ -63,6 +63,7 @@ export default function PopularRecommendations() {
                   price: product.price,
                   priceValue: parsePrice(product.price),
                   emoji: product.emoji,
+                  pagoEnCajaPermitido: product.pago_en_caja_permitido === true,
                 })}
                 className="rounded-full bg-primary-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-primary-700"
               >

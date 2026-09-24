@@ -12,7 +12,7 @@ type MenuRow = QuickDish & { description: string | null };
 async function loadMenu(): Promise<MenuRow[]> {
   const [categories, items] = await Promise.all([
     supabase.from('menu_categories').select('id, title'),
-    supabase.from('menu_items').select('id, name, description, price, emoji, category_id').order('orden'),
+    supabase.from('menu_items').select('id, name, description, price, emoji, category_id, pago_en_caja_permitido').order('orden'),
   ]);
   if (categories.error || items.error) throw categories.error ?? items.error;
   const titles = new Map((categories.data ?? []).map((c) => [c.id as string, c.title as string]));

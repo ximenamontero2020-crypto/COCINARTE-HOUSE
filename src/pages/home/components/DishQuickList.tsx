@@ -9,6 +9,8 @@ export type QuickDish = {
   emoji: string;
   category_id: string;
   category_title: string;
+  // Las RPC de recomendaciones no lo devuelven: sin dato = requiere preparación.
+  pago_en_caja_permitido?: boolean;
 };
 
 /** Lista compacta de platillos con "Agregar" al carrito (misma key que DishCard, así se suman). */
@@ -38,6 +40,7 @@ export default function DishQuickList({ items }: { items: QuickDish[] }) {
                 price: item.price,
                 priceValue: parsePrice(item.price),
                 emoji: item.emoji,
+                pagoEnCajaPermitido: item.pago_en_caja_permitido === true,
               });
               playFoley('success');
             }}

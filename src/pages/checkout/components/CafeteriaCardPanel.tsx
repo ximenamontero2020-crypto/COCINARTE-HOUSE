@@ -11,13 +11,11 @@ export default function CafeteriaCardPanel({
   submitting,
   closed,
   onPay,
-  onChooseCaja,
 }: {
   total: number;
   submitting: boolean;
   closed: boolean;
   onPay: () => Promise<void>;
-  onChooseCaja: () => void;
 }) {
   const { card, error, refresh } = useCafeteriaCard();
   const { profile } = useAuth();
@@ -51,11 +49,8 @@ export default function CafeteriaCardPanel({
         <div role="alert" className="rounded-xl bg-accent-100 text-accent-900 text-sm px-4 py-3 flex items-start gap-2">
           <i className="ri-error-warning-line mt-0.5"></i>
           <span>
-            Saldo insuficiente. Tu saldo es {pesos.format(balance)}; el pedido es {pesos.format(total)}. Recarga o{' '}
-            <button type="button" onClick={onChooseCaja} className="font-semibold underline cursor-pointer">
-              elige pagar en caja
-            </button>
-            .
+            Saldo insuficiente. Tu saldo es {pesos.format(balance)}; el pedido es {pesos.format(total)}. Recarga en
+            caja o usa otro método de pago.
           </span>
         </div>
       )}

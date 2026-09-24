@@ -13,8 +13,13 @@ export type ComandaCreada = {
  * Crea la comanda con la RPC create_comanda. Solo se envían ids y cantidades:
  * el servidor lee los precios de menu_items, calcula el total, asigna el
  * número de pedido y, con 'cafeteria', cobra el saldo en la misma transacción.
+ * Con 'caja' el servidor rechaza productos que requieren preparación.
  */
 export async function crearComanda(items: CartItem[], metodo: PaymentMethod): Promise<ComandaCreada> {
+	// La pasarela es un prototipo: nunca crea pedidos (create_comanda también la rechaza).
+	if (metodo === 'pasarela') {
+		throw new Error('La pasarela de pago es un prototipo y no puede crear pedidos.');
+	}
 	if (items.some((item) => item.menuItemId === undefined)) {
 		throw new Error('Algún platillo no se puede pedir en línea. Recarga el menú e inténtalo de nuevo.');
 	}

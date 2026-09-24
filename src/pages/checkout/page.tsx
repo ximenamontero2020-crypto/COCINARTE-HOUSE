@@ -4,7 +4,7 @@ import { useCart } from '@/context/CartContext';
 import CartList from './components/CartList';
 import PaymentMethods from './components/PaymentMethods';
 import SuccessScreen from './components/SuccessScreen';
-import type { OrderInfo, PaymentMethod } from '@/pages/checkout/types';
+import type { OrderInfo } from '@/pages/checkout/types';
 import { crearComanda } from '@/utils/orders';
 import { track } from '@/lib/analytics';
 
@@ -14,12 +14,21 @@ export default function Checkout() {
   const [order, setOrder] = useState<OrderInfo | null>(null);
 
   // Si create_comanda falla, el error sube al panel de pago y no se confirma nada.
-  const handleConfirm = async (method: PaymentMethod) => {
+  const handleConfirm = async (method: 'cafeteria' | 'caja') => {
     const comanda = await crearComanda(items, method);
     track('place_order', { method, value: comanda.total, item_count: items.reduce((n, i) => n + i.quantity, 0) });
     setOrder({ orderNumber: comanda.numero_pedido, method, total: comanda.total });
     clear();
   };
+
+  // Pasarela prototipo: solo pantalla de demostración. No llama create_comanda, no escribe en
+  // Supabase, no manda nada a cocina y no vacía el carrito (el pedido real sigue pendiente).
+  const handleMockPaid = (reference: string) => {
+    setOrder({ method: 'pasarela', reference, total: items.reduce((s, i) => s + i.priceValue * i.quantity, 0) });
+  };
+
+  // Efectivo solo si ningún producto requiere preparación (ver PaymentMethod en types.ts).
+  const cashAllowed = items.every((i) => i.pagoEnCajaPermitido);
 
   // Una vez por visita al checkout, solo si hay algo en el carrito.
   const checkoutTracked = useRef(false);
@@ -117,7 +126,7 @@ export default function Checkout() {
                 <CartList />
               </div>
               <div className="lg:col-span-2">
-                <PaymentMethods onConfirm={handleConfirm} />
+                <PaymentMethods onConfirm={handleConfirm} onMockPaid={handleMockPaid} cashAllowed={cashAllowed} />
               </div>
             </div>
           </>

@@ -10,6 +10,8 @@ export type CartItem = {
   price: string;
   priceValue: number;
   emoji: string;
+  // menu_items.pago_en_caja_permitido: producto listo que se puede pagar en efectivo.
+  pagoEnCajaPermitido: boolean;
   quantity: number;
 };
 
@@ -33,7 +35,9 @@ const STORAGE_KEY = 'cocinarte_cart';
 function loadCart(): CartItem[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as CartItem[]) : [];
+    const parsed = raw ? (JSON.parse(raw) as CartItem[]) : [];
+    // Carritos guardados antes del campo: sin dato = requiere preparación (sin efectivo).
+    return parsed.map((item) => ({ ...item, pagoEnCajaPermitido: item.pagoEnCajaPermitido === true }));
   } catch {
     return [];
   }

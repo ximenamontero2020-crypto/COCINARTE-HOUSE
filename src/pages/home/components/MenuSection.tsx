@@ -26,6 +26,7 @@ type MenuItemRow = {
   nutrition_carbs: number | null;
   nutrition_fat: number | null;
   allergens: string[] | null;
+  pago_en_caja_permitido: boolean | null;
   orden: number;
 };
 
@@ -43,6 +44,7 @@ const mapMenuItem = (row: MenuItemRow): MenuItem => ({
     fat: Number(row.nutrition_fat ?? 0),
   },
   allergens: Array.isArray(row.allergens) ? row.allergens : [],
+  pago_en_caja_permitido: row.pago_en_caja_permitido === true,
 });
 
 const mapMenuCategory = (category: MenuCategoryRow, items: MenuItemRow[]): MenuCategory => ({

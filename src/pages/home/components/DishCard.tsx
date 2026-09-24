@@ -114,6 +114,7 @@ export default function DishCard({ category, recommendedItemIds }: { category: M
                   price: item.price,
                   priceValue: parsePrice(item.price),
                   emoji: item.emoji,
+                  pagoEnCajaPermitido: item.pago_en_caja_permitido === true,
                 });
                 playFoley('success');
               };
@@ -225,6 +226,7 @@ export default function DishCard({ category, recommendedItemIds }: { category: M
               price: openItem.price,
               priceValue: parsePrice(openItem.price),
               emoji: openItem.emoji,
+              pagoEnCajaPermitido: openItem.pago_en_caja_permitido === true,
             });
             playFoley('success');
           }}

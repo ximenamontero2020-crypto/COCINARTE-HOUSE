@@ -4,7 +4,10 @@
 --   SELECT id, email, role FROM public.profiles ORDER BY role;
 
 -- 1) CUSTOMER: OK. El total y los precios salen de menu_items; ids repetidos se suman.
+--    'caja' exige pago_en_caja_permitido = true (se marca dentro de la transacción).
 BEGIN;
+UPDATE public.menu_items SET pago_en_caja_permitido = true
+WHERE id = (SELECT id FROM public.menu_items ORDER BY id LIMIT 1);
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claims', '{"sub":"<CUSTOMER_UUID>","role":"authenticated"}', true);
 SELECT public.create_comanda(
@@ -30,7 +33,7 @@ ROLLBACK;
 BEGIN;
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claims', '{"sub":"<CUSTOMER_UUID>","role":"authenticated"}', true);
-SELECT public.create_comanda('[{"menu_item_id": 999999999, "cantidad": 1}]', 'caja');
+SELECT public.create_comanda('[{"menu_item_id": 999999999, "cantidad": 1}]', 'cafeteria');
 -- esperado: ERROR "Algún platillo ya no está disponible. Actualiza tu carrito."
 ROLLBACK;
 
@@ -54,6 +57,48 @@ SELECT public.create_comanda(
 -- esperado: ERROR "Método de pago no válido"
 ROLLBACK;
 
+-- 2b) Pasarela: prototipo del frontend, nunca crea pedidos.
+BEGIN;
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claims', '{"sub":"<CUSTOMER_UUID>","role":"authenticated"}', true);
+SELECT public.create_comanda(
+  jsonb_build_array(jsonb_build_object('menu_item_id', (SELECT id FROM public.menu_items LIMIT 1), 'cantidad', 1)),
+  'pasarela'
+);
+-- esperado: ERROR "La pasarela de pago es un prototipo y no puede crear pedidos."
+ROLLBACK;
+
+-- 2c) Efectivo solo para productos sin preparación: si un solo item no lo permite, falla todo.
+BEGIN;
+UPDATE public.menu_items SET pago_en_caja_permitido = (id = (SELECT min(id) FROM public.menu_items));
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claims', '{"sub":"<CUSTOMER_UUID>","role":"authenticated"}', true);
+SELECT public.create_comanda(
+  jsonb_build_array(
+    jsonb_build_object('menu_item_id', (SELECT min(id) FROM public.menu_items), 'cantidad', 1),
+    jsonb_build_object('menu_item_id', (SELECT max(id) FROM public.menu_items), 'cantidad', 1)
+  ),
+  'caja'
+);
+-- esperado: ERROR "El pago en efectivo solo aplica a productos que no requieren preparación."
+ROLLBACK;
+
+-- 2d) Efectivo con todos los items permitidos: OK.
+BEGIN;
+UPDATE public.menu_items SET pago_en_caja_permitido = true
+WHERE id IN ((SELECT min(id) FROM public.menu_items), (SELECT max(id) FROM public.menu_items));
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claims', '{"sub":"<CUSTOMER_UUID>","role":"authenticated"}', true);
+SELECT public.create_comanda(
+  jsonb_build_array(
+    jsonb_build_object('menu_item_id', (SELECT min(id) FROM public.menu_items), 'cantidad', 1),
+    jsonb_build_object('menu_item_id', (SELECT max(id) FROM public.menu_items), 'cantidad', 1)
+  ),
+  'caja'
+);
+-- esperado: comanda con metodo_pago 'caja', sin saldo cobrado
+ROLLBACK;
+
 -- 3) CUSTOMER: 'cafeteria' sin saldo suficiente no deja comanda creada.
 BEGIN;
 SET LOCAL ROLE authenticated;
@@ -63,7 +108,7 @@ SELECT public.create_comanda(
   jsonb_build_array(jsonb_build_object('menu_item_id', (SELECT id FROM public.menu_items LIMIT 1), 'cantidad', 50)),
   'cafeteria'
 );
--- esperado: ERROR "Saldo insuficiente. Tu saldo es $…; el pedido es $…. Recarga o elige pagar en caja."
+-- esperado: ERROR "Saldo insuficiente. Tu saldo es $…; el pedido es $…. Recarga en caja o usa otro método de pago."
 ROLLBACK;
 
 -- 3b) pay_with_cocinarte_card: saldo 0, exacto y de más. El STAFF deja el saldo exacto
