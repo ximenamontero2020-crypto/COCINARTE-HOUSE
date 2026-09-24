@@ -1,24 +1,12 @@
 import { useState } from 'react';
 import { formatPrice } from '@/utils/price';
-import { MOCK_TEST_CARDS, mockGateway, type PaymentGateway } from '@/lib/payments/mockGateway';
-
-const inputClass =
-  'w-full rounded-xl border border-background-200/70 bg-background-50 px-3 py-2.5 text-sm text-foreground-950 placeholder:text-foreground-400 focus:outline-none focus:border-primary-400';
-
-const formatCardNumber = (value: string) =>
-  value
-    .replace(/\D/g, '')
-    .slice(0, 19)
-    .replace(/(\d{4})(?=\d)/g, '$1 ');
-
-const formatExpiry = (value: string) => {
-  const d = value.replace(/\D/g, '').slice(0, 4);
-  return d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d;
-};
+import { playFoley } from '@/hooks/useFoley';
+import { mockGateway, type PaymentGateway } from '@/lib/payments/mockGateway';
 
 /**
- * Pasarela de pago PROTOTIPO: solo llama a gateway.charge (simulado). No crea
- * comandas, no escribe en Supabase y no manda nada a cocina.
+ * Pago con tarjeta en MODO DEMOSTRACIÓN: solo llama a gateway.charge (simulado). No crea
+ * comandas, no escribe en Supabase y no manda nada a cocina. Para un proveedor real basta
+ * con pasar otro `gateway` que implemente PaymentGateway.
  */
 export default function MockGatewayForm({
   total,
@@ -29,103 +17,108 @@ export default function MockGatewayForm({
   onSuccess: (reference: string) => void;
   gateway?: PaymentGateway;
 }) {
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardholder, setCardholder] = useState('');
+  const [name, setName] = useState('');
+  const [number, setNumber] = useState('');
   const [expiry, setExpiry] = useState('');
   const [cvv, setCvv] = useState('');
-  const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
+  const [processing, setProcessing] = useState(false);
 
-  const submit = async (e: React.FormEvent) => {
+  const handleNumber = (v: string) => {
+    const digits = v.replace(/\D/g, '').slice(0, 16);
+    setNumber(digits.replace(/(.{4})/g, '$1 ').trim());
+  };
+
+  const handleExpiry = (v: string) => {
+    const d = v.replace(/\D/g, '').slice(0, 4);
+    setExpiry(d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (processing) return;
+    if (
+      !name.trim() ||
+      number.replace(/\s/g, '').length < 12 ||
+      !/^\d{2}\/\d{2}$/.test(expiry) ||
+      cvv.length < 3
+    ) {
+      setError('Revisa los datos de tu tarjeta antes de continuar.');
+      return;
+    }
     setError('');
     setProcessing(true);
-    const result = await gateway.charge({ amount: total, cardNumber, cardholder, expiry, cvv });
-    setProcessing(false);
+    const result = await gateway.charge({ amount: total, cardNumber: number, cardholder: name, expiry, cvv });
     if (result.ok) {
+      playFoley('success');
       onSuccess(result.reference ?? 'DEMO');
     } else {
-      setError(result.error ?? 'El pago simulado fue rechazado.');
+      setProcessing(false);
+      setError(result.error ?? 'No pudimos procesar tu tarjeta. Inténtalo de nuevo.');
     }
   };
 
-  return (
-    <form onSubmit={(e) => void submit(e)} className="space-y-4">
-      <span className="inline-flex items-center gap-2 rounded-full bg-accent-100 text-accent-700 text-xs font-semibold px-3 py-1 whitespace-nowrap">
-        <i className="ri-flask-line"></i>
-        Prototipo · no se realiza ningún cobro
-      </span>
+  const inputClass =
+    'w-full rounded-md border border-background-200/70 bg-background-50 px-3 py-2.5 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-400';
 
-      <div className="grid gap-3">
-        <label className="block">
-          <span className="block text-xs font-semibold text-foreground-600 mb-1">Número de tarjeta</span>
-          <input
-            className={inputClass}
-            inputMode="numeric"
-            autoComplete="off"
-            placeholder="4242 4242 4242 4242"
-            value={cardNumber}
-            onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-            disabled={processing}
-          />
+  return (
+    <form onSubmit={(e) => void handleSubmit(e)} className="mt-5 space-y-3">
+      <div>
+        <label className="block text-xs font-medium text-foreground-600 mb-1.5">
+          Nombre en la tarjeta
         </label>
-        <label className="block">
-          <span className="block text-xs font-semibold text-foreground-600 mb-1">Nombre en la tarjeta</span>
-          <input
-            className={inputClass}
-            autoComplete="off"
-            placeholder="Como aparece en la tarjeta"
-            value={cardholder}
-            onChange={(e) => setCardholder(e.target.value)}
-            disabled={processing}
-          />
-        </label>
-        <div className="grid grid-cols-2 gap-3">
-          <label className="block">
-            <span className="block text-xs font-semibold text-foreground-600 mb-1">Vencimiento</span>
-            <input
-              className={inputClass}
-              inputMode="numeric"
-              autoComplete="off"
-              placeholder="MM/AA"
-              value={expiry}
-              onChange={(e) => setExpiry(formatExpiry(e.target.value))}
-              disabled={processing}
-            />
-          </label>
-          <label className="block">
-            <span className="block text-xs font-semibold text-foreground-600 mb-1">CVV</span>
-            <input
-              className={inputClass}
-              inputMode="numeric"
-              autoComplete="off"
-              placeholder="123"
-              value={cvv}
-              onChange={(e) => setCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
-              disabled={processing}
-            />
-          </label>
-        </div>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Ej. Ana García"
+          className={inputClass}
+          disabled={processing}
+        />
       </div>
 
-      <div className="rounded-xl border border-background-200/70 bg-background-100 px-4 py-3 text-xs text-foreground-600">
-        <p className="font-semibold text-foreground-700 mb-1">Tarjetas de prueba (cualquier fecha futura y CVV)</p>
-        <ul className="space-y-0.5">
-          {MOCK_TEST_CARDS.map((card) => (
-            <li key={card.number}>
-              <button
-                type="button"
-                onClick={() => setCardNumber(card.number)}
-                disabled={processing}
-                className="font-mono underline cursor-pointer"
-              >
-                {card.number}
-              </button>{' '}
-              · {card.result}
-            </li>
-          ))}
-        </ul>
+      <div>
+        <label className="block text-xs font-medium text-foreground-600 mb-1.5">
+          Número de tarjeta
+        </label>
+        <input
+          type="text"
+          inputMode="numeric"
+          value={number}
+          onChange={(e) => handleNumber(e.target.value)}
+          placeholder="1234 5678 9012 3456"
+          className={inputClass}
+          disabled={processing}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-medium text-foreground-600 mb-1.5">
+            Vencimiento
+          </label>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={expiry}
+            onChange={(e) => handleExpiry(e.target.value)}
+            placeholder="MM/AA"
+            className={inputClass}
+            disabled={processing}
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-foreground-600 mb-1.5">CVV</label>
+          <input
+            type="password"
+            inputMode="numeric"
+            value={cvv}
+            onChange={(e) => setCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
+            placeholder="123"
+            className={inputClass}
+            disabled={processing}
+          />
+        </div>
       </div>
 
       {error && (
@@ -135,22 +128,28 @@ export default function MockGatewayForm({
         </p>
       )}
 
-      <p className="text-sm text-foreground-600 flex items-start gap-2">
-        <i className="ri-information-line mt-0.5 text-foreground-500"></i>
-        <span>Es una demostración: no se cobra nada y no se envía ningún pedido a cocina.</span>
-      </p>
-
       <button
         type="submit"
         disabled={processing}
-        className={`w-full rounded-full py-3 font-semibold text-sm transition-colors whitespace-nowrap ${
+        className={`w-full rounded-full py-3 font-semibold text-sm transition-colors cursor-pointer whitespace-nowrap ${
           processing
             ? 'bg-background-200 text-foreground-400 cursor-not-allowed'
-            : 'bg-primary-500 text-background-50 hover:bg-primary-600 cursor-pointer'
+            : 'bg-primary-500 text-background-50 hover:bg-primary-600'
         }`}
       >
-        {processing ? 'Procesando pago simulado…' : `Simular pago · ${formatPrice(total)}`}
+        {processing ? (
+          <span className="inline-flex items-center gap-2">
+            <i className="ri-loader-4-line animate-spin"></i>
+            Procesando pago…
+          </span>
+        ) : (
+          `Pagar ${formatPrice(total)}`
+        )}
       </button>
+
+      <p className="text-center text-[11px] text-foreground-400">
+        Pago con tarjeta en modo demostración: no se realiza ningún cargo.
+      </p>
     </form>
   );
 }

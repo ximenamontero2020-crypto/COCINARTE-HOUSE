@@ -7,14 +7,11 @@ import type { PaymentMethod } from '@/pages/checkout/types';
 import PopularRecommendations from './PopularRecommendations';
 import CafeteriaNotice from '@/components/CafeteriaNotice';
 import { useCafeteriaStatus } from '@/hooks/useCafeteriaStatus';
-import { MOCK_GATEWAY_ENABLED } from '@/lib/payments/mockGateway';
 
 const METHODS: { id: PaymentMethod; label: string; desc: string; icon: string }[] = [
+  // Modo demostración: no cobra ni crea pedidos (ver src/lib/payments/mockGateway.ts).
+  { id: 'pasarela', label: 'Tarjeta', desc: 'Débito o crédito', icon: 'ri-bank-card-line' },
   { id: 'cafeteria', label: 'Tarjeta Cocinarte', desc: 'Paga con tu saldo', icon: 'ri-bank-card-2-line' },
-  // Prototipo: en producción solo aparece con VITE_PUBLIC_ENABLE_MOCK_GATEWAY=true.
-  ...(MOCK_GATEWAY_ENABLED
-    ? [{ id: 'pasarela' as const, label: 'Tarjeta de crédito o débito', desc: 'Prototipo · no se realiza ningún cobro', icon: 'ri-secure-payment-line' }]
-    : []),
   { id: 'caja', label: 'Pagar en caja', desc: 'Efectivo al recoger · solo productos listos', icon: 'ri-store-2-line' },
 ];
 
@@ -150,7 +147,7 @@ export default function PaymentMethods({
             onPay={() => confirm('cafeteria')}
           />
         )}
-        {method === 'pasarela' && MOCK_GATEWAY_ENABLED && <MockGatewayForm total={total} onSuccess={onMockPaid} />}
+        {method === 'pasarela' && <MockGatewayForm total={total} onSuccess={onMockPaid} />}
       </div>
     </div>
   );

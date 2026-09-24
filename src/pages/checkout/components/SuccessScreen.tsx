@@ -23,11 +23,11 @@ const METHOD_DETAIL: Record<
     totalLabel: 'Total pagado',
     hint: 'El saldo fue descontado de tu tarjeta.',
   },
-  // Prototipo: no se cobró nada y no se creó ningún pedido.
+  // Modo demostración: no se cobró nada y no se creó ningún pedido.
   pasarela: {
     icon: 'ri-flask-line',
     heading: 'Pago simulado',
-    title: 'Pasarela de pago · Prototipo',
+    title: 'Tarjeta · Modo demostración',
     totalLabel: 'Monto simulado (no se cobró)',
     hint: 'Esto fue una simulación: no se realizó ningún cobro y NO se envió ningún pedido a cocina. Para pedir de verdad, paga con tu tarjeta CocinArte.',
   },

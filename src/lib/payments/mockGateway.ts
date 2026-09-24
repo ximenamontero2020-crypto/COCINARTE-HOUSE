@@ -1,5 +1,5 @@
 /**
- * Pasarela de pago PROTOTIPO. No se conecta a nada (sin Stripe, Mercado Pago,
+ * Pasarela de pago en MODO DEMOSTRACIÓN. No se conecta a nada (sin Stripe, Mercado Pago,
  * PayPal ni llamadas de red) y no realiza ningún cobro. La UI solo depende de
  * PaymentGateway, así que después se puede cambiar por un proveedor real.
  *
@@ -21,17 +21,7 @@ export interface PaymentGateway {
   charge(input: ChargeInput): Promise<ChargeResult>;
 }
 
-/** Tarjetas de prueba que muestra el formulario. */
-export const MOCK_TEST_CARDS = [
-  { number: '4242 4242 4242 4242', result: 'Aprobada' },
-  { number: '4000 0000 0000 0002', result: 'Rechazada' },
-] as const;
-
-const PROCESSING_MS = 1500;
-
-/** Visible en dev; en producción solo con VITE_PUBLIC_ENABLE_MOCK_GATEWAY=true. */
-export const MOCK_GATEWAY_ENABLED =
-  !import.meta.env.PROD || import.meta.env.VITE_PUBLIC_ENABLE_MOCK_GATEWAY === 'true';
+const PROCESSING_MS = 1600;
 
 const digits = (value: string) => value.replace(/\D/g, '');
 
