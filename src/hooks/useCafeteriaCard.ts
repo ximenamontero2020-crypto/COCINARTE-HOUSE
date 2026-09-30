@@ -8,8 +8,9 @@ type CafeteriaCard = {
 
 /**
  * Saldo de la Tarjeta CocinArte leído del servidor (RPC get_card_balance).
- * Las recargas se hacen en caja con el staff; el cobro ocurre dentro de
- * create_comanda. Aquí solo se lee.
+ * Las recargas reales se hacen en caja con el staff; el cobro ocurre dentro de
+ * create_comanda. `recharge` es la recarga DEMO de autoservicio (demo_self_recharge):
+ * el pago es simulado pero el saldo se abona de verdad (excepción documentada en CLAUDE.md).
  */
 export function useCafeteriaCard() {
   const [card, setCard] = useState<CafeteriaCard | null>(null);
@@ -30,5 +31,21 @@ export function useCafeteriaCard() {
     void refresh();
   }, [refresh]);
 
-  return { card, error, refresh };
+  // requestId: el mismo id para reintentos de una misma recarga, así el servidor abona una sola vez.
+  const recharge = useCallback(async (amount: number, requestId: string): Promise<number> => {
+    const { data, error: rpcError } = await supabase.rpc('demo_self_recharge', {
+      p_amount: amount,
+      p_request_id: requestId,
+    });
+    if (rpcError) {
+      console.error('Error en recarga demo:', rpcError);
+      throw new Error(rpcError.message || 'No pudimos recargar tu saldo. Inténtalo de nuevo.');
+    }
+    const balance = Number(data.balance);
+    setError('');
+    setCard({ number: data.card_number, balance });
+    return balance;
+  }, []);
+
+  return { card, error, refresh, recharge };
 }

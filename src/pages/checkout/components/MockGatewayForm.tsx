@@ -14,15 +14,21 @@ function centerOnMobile(event: FocusEvent<HTMLInputElement>) {
  * Pago con tarjeta en MODO DEMOSTRACIÓN: solo llama a gateway.charge (simulado). No crea
  * comandas, no escribe en Supabase y no manda nada a cocina. Para un proveedor real basta
  * con pasar otro `gateway` que implemente PaymentGateway.
+ *
+ * Lo usa también la recarga demo de la Tarjeta CocinArte (CardRechargeDialog): ahí
+ * `onSuccess` es asíncrono y, si falla, el error se muestra aquí y se puede reintentar.
  */
 export default function MockGatewayForm({
   total,
   onSuccess,
   gateway = mockGateway,
+  submitLabel,
 }: {
   total: number;
-  onSuccess: (reference: string) => void;
+  onSuccess: (reference: string) => void | Promise<void>;
   gateway?: PaymentGateway;
+  // Texto del botón; por defecto "Pagar $X" (checkout).
+  submitLabel?: string;
 }) {
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
@@ -57,8 +63,13 @@ export default function MockGatewayForm({
     setProcessing(true);
     const result = await gateway.charge({ amount: total, cardNumber: number, cardholder: name, expiry, cvv });
     if (result.ok) {
-      playFoley('success');
-      onSuccess(result.reference ?? 'DEMO');
+      try {
+        await onSuccess(result.reference ?? 'DEMO');
+        playFoley('success');
+      } catch (err) {
+        setProcessing(false);
+        setError(err instanceof Error ? err.message : 'No pudimos completar la operación. Inténtalo de nuevo.');
+      }
     } else {
       setProcessing(false);
       setError(result.error ?? 'No pudimos procesar tu tarjeta. Inténtalo de nuevo.');
@@ -154,7 +165,7 @@ export default function MockGatewayForm({
             Procesando pago…
           </span>
         ) : (
-          `Pagar ${formatPrice(total)}`
+          submitLabel ?? `Pagar ${formatPrice(total)}`
         )}
       </button>
 

@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useCafeteriaCard } from '@/hooks/useCafeteriaCard';
 import { useAuth } from '@/context/AuthContext';
 import CocinArteCard from '@/components/CocinArteCard';
+import CardRechargeDialog from '@/components/CardRechargeDialog';
 import { normalizeMembershipLevel } from '@/components/membership';
 import { formatPrice } from '@/utils/price';
 
@@ -17,8 +19,9 @@ export default function CafeteriaCardPanel({
   closed: boolean;
   onPay: () => Promise<void>;
 }) {
-  const { card, error, refresh } = useCafeteriaCard();
+  const { card, error, refresh, recharge } = useCafeteriaCard();
   const { profile } = useAuth();
+  const [rechargeOpen, setRechargeOpen] = useState(false);
 
   const balance = card?.balance ?? 0;
   const insufficient = card !== null && balance < total;
@@ -41,7 +44,18 @@ export default function CafeteriaCardPanel({
           </span>
         </div>
         {card && <span className="mt-1 block text-xs text-foreground-500">Tarjeta {card.number}</span>}
+        <button
+          type="button"
+          onClick={() => setRechargeOpen(true)}
+          disabled={!card || submitting}
+          className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-full border border-primary-300 px-4 text-sm font-semibold text-primary-700 transition-colors hover:bg-primary-50 disabled:cursor-not-allowed disabled:opacity-50 md:min-h-0 md:py-2"
+        >
+          <i className="ri-add-circle-line" aria-hidden="true"></i>
+          Recargar saldo
+        </button>
+        <p className="mt-1 text-[11px] text-foreground-400">Modo demo — no se procesan pagos reales.</p>
       </div>
+      {rechargeOpen && <CardRechargeDialog onClose={() => setRechargeOpen(false)} onRecharge={recharge} />}
 
       {error && <p className="text-sm text-accent-700 bg-accent-100 rounded-lg px-3 py-2">{error}</p>}
 
@@ -49,8 +63,8 @@ export default function CafeteriaCardPanel({
         <div role="alert" className="rounded-xl bg-accent-100 text-accent-900 text-sm px-4 py-3 flex items-start gap-2">
           <i className="ri-error-warning-line mt-0.5"></i>
           <span>
-            Saldo insuficiente. Tu saldo es {pesos.format(balance)}; el pedido es {pesos.format(total)}. Recarga en
-            caja o usa otro método de pago.
+            Saldo insuficiente. Tu saldo es {pesos.format(balance)}; el pedido es {pesos.format(total)}. Usa «Recargar
+            saldo», recarga en caja o elige otro método de pago.
           </span>
         </div>
       )}

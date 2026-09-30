@@ -5,6 +5,10 @@
  *
  * Nunca marca pedidos como pagados ni los manda a cocina: quien la use no debe
  * llamar create_comanda ni escribir en Supabase.
+ *
+ * ÚNICA excepción (documentada en CLAUDE.md): la recarga demo de la Tarjeta CocinArte
+ * (CardRechargeDialog → demo_self_recharge) abona saldo real después de este cobro simulado,
+ * para que quien evalúe el prototipo pueda probar "recargar → pagar con saldo".
  */
 
 export type ChargeInput = {
