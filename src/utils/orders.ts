@@ -65,6 +65,38 @@ export async function crearComandaInvitado(items: CartItem[], invitado: DatosInv
 	return toComandaCreada(data);
 }
 
+/**
+ * Pedido sin cuenta pagado con la tarjeta de INVITADO (pay_with_guest_card): el servidor crea
+ * la comanda y descuenta el saldo en una sola transacción, así que aquí sí se permiten
+ * platillos que se preparan. requestId se repite en reintentos: nunca cobra dos veces.
+ */
+export async function pagarConTarjetaInvitado(
+	items: CartItem[],
+	invitado: DatosInvitado,
+	cardToken: string,
+	requestId: string,
+): Promise<ComandaCreada> {
+	if (items.some((item) => item.menuItemId === undefined)) {
+		throw new Error('Algún platillo no se puede pedir en línea. Recarga el menú e inténtalo de nuevo.');
+	}
+
+	const p_items = items.map((item) => ({ menu_item_id: item.menuItemId, cantidad: item.quantity }));
+	const { data, error } = await supabase.rpc('pay_with_guest_card', {
+		p_card_token: cardToken,
+		p_items,
+		p_nombre: invitado.nombre.trim(),
+		p_email: invitado.email.trim() || null,
+		p_request_id: requestId,
+	});
+
+	if (error) {
+		console.error('Error pagando con tarjeta de invitado:', error);
+		throw new Error(error.message || 'No pudimos registrar tu pedido. Inténtalo de nuevo.');
+	}
+
+	return toComandaCreada(data);
+}
+
 function toComandaCreada(data: { id: number | string; numero_pedido: string; total: number | string; saldo: number | string | null }): ComandaCreada {
 	return {
 		id: data.id,

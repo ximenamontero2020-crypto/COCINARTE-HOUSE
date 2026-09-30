@@ -32,7 +32,8 @@ SELECT public.create_guest_comanda(
   jsonb_build_array(jsonb_build_object('menu_item_id', (SELECT id FROM public.menu_items ORDER BY id LIMIT 1), 'cantidad', 1)),
   'Ana'
 );
--- esperado: ERROR "Sin cuenta solo puedes pedir productos listos para pagar en caja. ..."
+-- esperado: ERROR "Sin cuenta, en caja solo puedes pedir productos listos. ..."
+--   (antes de 20260924000013: "Sin cuenta solo puedes pedir productos listos para pagar en caja. ...")
 ROLLBACK;
 
 -- 3) ANON: DENY. Nombre vacío / correo inválido.

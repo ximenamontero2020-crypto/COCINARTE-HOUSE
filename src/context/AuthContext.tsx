@@ -8,6 +8,7 @@ import {
 } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { clearGuestCardToken } from '@/lib/guestCard';
 
 export type Profile = {
   name: string | null;
@@ -100,6 +101,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(data.session);
         setLoading(false);
         if (data.session?.user) {
+          // Con cuenta, la tarjeta de invitado de este navegador se olvida (su saldo no se migra).
+          clearGuestCardToken();
           await ensureProfile(data.session.user);
           supabase
             .from('profiles')
@@ -125,6 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       if (newSession?.user) {
+        clearGuestCardToken();
         void (async () => {
           await ensureProfile(newSession.user);
           const { data: profileData } = await supabase

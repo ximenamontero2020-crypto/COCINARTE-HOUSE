@@ -35,11 +35,12 @@ const METHOD_DETAIL: Record<
 
 // Invitado: la tarjeta CocinArte requiere cuenta, así que el "pedir de verdad" es distinto.
 const PASARELA_HINT_GUEST =
-  'Esto fue una simulación: no se realizó ningún cobro y NO se envió ningún pedido a cocina. Para pedir de verdad sin cuenta, elige «Pagar en caja» (solo productos listos) o inicia sesión para usar tu tarjeta CocinArte.';
+  'Esto fue una simulación: no se realizó ningún cobro y NO se envió ningún pedido a cocina. Para pedir de verdad sin cuenta, paga con tu tarjeta CocinArte de invitado o elige «Pagar en caja» (solo productos listos).';
+const CARD_HINT_GUEST = 'El saldo fue descontado de tu tarjeta de invitado.';
 
 export default function SuccessScreen({ order, isGuest = false }: { order: OrderInfo; isGuest?: boolean }) {
   const d = METHOD_DETAIL[order.method];
-  const hint = isGuest && order.method === 'pasarela' ? PASARELA_HINT_GUEST : d.hint;
+  const hint = !isGuest ? d.hint : order.method === 'pasarela' ? PASARELA_HINT_GUEST : order.method === 'cafeteria' ? CARD_HINT_GUEST : d.hint;
 
   return (
     <div className="max-w-lg mx-auto text-center py-8">
@@ -93,7 +94,7 @@ export default function SuccessScreen({ order, isGuest = false }: { order: Order
         <div className="mt-10 rounded-2xl border border-primary-200 bg-primary-50 p-5 text-left">
           <p className="text-sm font-semibold text-primary-800">¿Te late jugar por descuentos?</p>
           <p className="mt-1 text-sm text-primary-900">
-            Con una cuenta (opcional) juegas y ganas descuentos, subes de nivel de membresía y puedes pedir platillos que se preparan al momento.
+            Con una cuenta (opcional) juegas y ganas descuentos, subes de nivel de membresía y tu Tarjeta CocinArte ya no depende de este navegador.
           </p>
           <Link
             to="/auth"

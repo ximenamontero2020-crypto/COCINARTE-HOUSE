@@ -26,10 +26,13 @@ type Step = 'amount' | 'pay' | 'done';
 export default function CardRechargeDialog({
   onClose,
   onRecharge,
+  notice,
 }: {
   onClose: () => void;
   // Devuelve el saldo nuevo. requestId se repite en reintentos: el servidor abona una sola vez.
   onRecharge: (amount: number, requestId: string) => Promise<number>;
+  // Aviso extra (p. ej. tarjeta de invitado temporal).
+  notice?: string;
 }) {
   const [step, setStep] = useState<Step>('amount');
   const [amount, setAmount] = useState<number | null>(null);
@@ -123,6 +126,12 @@ export default function CardRechargeDialog({
           <i className="ri-flask-line" aria-hidden="true"></i>
           <span>Modo demo — no se procesan pagos reales; es una simulación para el prototipo.</span>
         </p>
+        {notice && (
+          <p role="note" className="mt-2 flex items-start gap-1.5 rounded-lg bg-accent-50 px-2.5 py-2 text-xs text-accent-900">
+            <i className="ri-time-line" aria-hidden="true"></i>
+            <span>{notice}</span>
+          </p>
+        )}
 
         {step === 'amount' && (
           <div className="mt-5">

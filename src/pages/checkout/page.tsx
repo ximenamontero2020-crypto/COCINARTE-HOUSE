@@ -7,7 +7,8 @@ import SuccessScreen from './components/SuccessScreen';
 import GuestDetails from './components/GuestDetails';
 import { datosInvitadoValidos } from './guest';
 import type { OrderInfo } from '@/pages/checkout/types';
-import { crearComanda, crearComandaInvitado, type DatosInvitado } from '@/utils/orders';
+import { crearComanda, crearComandaInvitado, pagarConTarjetaInvitado, type DatosInvitado } from '@/utils/orders';
+import { getOrCreateGuestCardToken } from '@/lib/guestCard';
 import { useAuth } from '@/context/AuthContext';
 import { track } from '@/lib/analytics';
 import { supabase } from '@/lib/supabase';
@@ -21,10 +22,23 @@ export default function Checkout() {
   // Datos del invitado solo en memoria: no se guardan en el navegador.
   const [guest, setGuest] = useState<DatosInvitado>({ nombre: '', email: '' });
 
+  // Llave de idempotencia del pago con tarjeta de invitado: se reusa si hay que reintentar
+  // (doble clic, red) y se renueva después de un pedido exitoso.
+  const guestPayRequestId = useRef(crypto.randomUUID());
+
   // Si la RPC falla, el error sube al panel de pago y no se confirma nada.
-  // Invitado: create_guest_comanda (siempre 'caja'); con sesión: create_comanda / tarjeta.
+  // Con sesión: create_comanda / tarjeta. Invitado: create_guest_comanda ('caja', productos listos)
+  // o pay_with_guest_card (tarjeta de invitado: pedido y cobro en una transacción, cualquier platillo).
   const handleConfirm = async (method: 'cafeteria' | 'caja') => {
-    const comanda = isGuest ? await crearComandaInvitado(items, guest) : await crearComanda(items, method);
+    let comanda;
+    if (!isGuest) {
+      comanda = await crearComanda(items, method);
+    } else if (method === 'cafeteria') {
+      comanda = await pagarConTarjetaInvitado(items, guest, getOrCreateGuestCardToken(), guestPayRequestId.current);
+      guestPayRequestId.current = crypto.randomUUID();
+    } else {
+      comanda = await crearComandaInvitado(items, guest);
+    }
     track('place_order', { method, guest: isGuest, value: comanda.total, item_count: items.reduce((n, i) => n + i.quantity, 0) });
     setOrder({ orderNumber: comanda.numero_pedido, method, total: comanda.total, guestName: isGuest ? guest.nombre.trim() : undefined });
     clear();

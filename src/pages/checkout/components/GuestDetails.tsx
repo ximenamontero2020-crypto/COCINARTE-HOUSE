@@ -3,8 +3,9 @@ import type { DatosInvitado } from '@/utils/orders';
 import { EMAIL_RE, NOMBRE_MAX } from '../guest';
 
 const PERKS = [
-  { icon: 'ri-restaurant-line', text: 'Pide platillos que se preparan al momento' },
-  { icon: 'ri-bank-card-2-line', text: 'Paga con tu Tarjeta CocinArte' },
+  // Sin cuenta también hay tarjeta, pero temporal (solo en este navegador).
+  { icon: 'ri-bank-card-2-line', text: 'Tu Tarjeta CocinArte y su saldo, en cualquier dispositivo' },
+  { icon: 'ri-history-line', text: 'Ve los movimientos de tu tarjeta' },
   { icon: 'ri-vip-crown-line', text: 'Sube de nivel de membresía con cada compra' },
   { icon: 'ri-gamepad-line', text: 'Juega y gana descuentos' },
 ];

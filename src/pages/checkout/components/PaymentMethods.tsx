@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useCart } from '@/context/CartContext';
 import { formatPrice } from '@/utils/price';
 import CafeteriaCardPanel from './CafeteriaCardPanel';
+import GuestCardPanel from './GuestCardPanel';
 import MockGatewayForm from './MockGatewayForm';
 import type { PaymentMethod } from '@/pages/checkout/types';
 import PopularRecommendations from './PopularRecommendations';
@@ -19,10 +20,10 @@ const METHODS: { id: PaymentMethod; label: string; desc: string; icon: string }[
 // cliente no llega, la comida se desperdicia. El servidor (create_comanda) aplica la misma regla.
 const CASH_BLOCKED_REASON =
   'Tu carrito tiene productos que se preparan al momento. Paga con tu tarjeta CocinArte o con tarjeta.';
-// Invitado: la Tarjeta CocinArte es de la cuenta, así que sin sesión solo queda el efectivo.
+// Invitado: en caja solo productos listos; lo que se prepara se paga con la tarjeta de invitado.
 const CASH_BLOCKED_REASON_GUEST =
-  'Tu carrito tiene productos que se preparan al momento. Sin cuenta solo puedes pedir productos listos; inicia sesión para pagarlos con tu Tarjeta CocinArte.';
-const CARD_GUEST_REASON = 'Inicia sesión para pagar con el saldo de tu tarjeta.';
+  'Tu carrito tiene productos que se preparan al momento. En caja solo van productos listos: paga con tu tarjeta CocinArte de invitado.';
+const CARD_DESC_GUEST = 'Tarjeta de invitado · en este navegador';
 
 export default function PaymentMethods({
   onConfirm,
@@ -35,7 +36,7 @@ export default function PaymentMethods({
   // Solo muestra la pantalla de demostración: la pasarela nunca crea pedidos.
   onMockPaid: (reference: string) => void;
   cashAllowed: boolean;
-  // Sin sesión: no hay Tarjeta CocinArte y el pedido en caja pide nombre (GuestDetails).
+  // Sin sesión: Tarjeta CocinArte de invitado (GuestCardPanel) y el pedido pide nombre (GuestDetails).
   isGuest?: boolean;
   guestReady?: boolean;
 }) {
@@ -73,12 +74,7 @@ export default function PaymentMethods({
       <div className="mt-5 grid gap-3">
         {METHODS.map((m) => {
           const active = method === m.id;
-          const reason =
-            m.id === 'caja' && !cashAllowed
-              ? isGuest ? CASH_BLOCKED_REASON_GUEST : CASH_BLOCKED_REASON
-              : m.id === 'cafeteria' && isGuest
-                ? CARD_GUEST_REASON
-                : null;
+          const reason = m.id === 'caja' && !cashAllowed ? (isGuest ? CASH_BLOCKED_REASON_GUEST : CASH_BLOCKED_REASON) : null;
           const disabled = reason !== null;
           return (
             <button
@@ -106,7 +102,7 @@ export default function PaymentMethods({
               </span>
               <span className="flex-1">
                 <span className="block font-semibold text-foreground-950 text-sm">{m.label}</span>
-                <span className="block text-xs text-foreground-500">{m.desc}</span>
+                <span className="block text-xs text-foreground-500">{isGuest && m.id === 'cafeteria' ? CARD_DESC_GUEST : m.desc}</span>
                 {reason && (
                   <span className="mt-1 flex items-start gap-1 text-xs text-accent-700">
                     <i className="ri-information-line mt-px"></i>
@@ -160,7 +156,16 @@ export default function PaymentMethods({
             </button>
           </div>
         )}
-        {method === 'cafeteria' && (
+        {method === 'cafeteria' && isGuest && (
+          <GuestCardPanel
+            total={total}
+            submitting={submitting}
+            closed={closed}
+            guestReady={guestReady}
+            onPay={() => confirm('cafeteria')}
+          />
+        )}
+        {method === 'cafeteria' && !isGuest && (
           <CafeteriaCardPanel
             total={total}
             submitting={submitting}
