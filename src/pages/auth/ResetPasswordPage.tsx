@@ -60,7 +60,7 @@ export default function ResetPasswordPage() {
             <button
               type="button"
               onClick={() => navigate('/auth', { replace: true })}
-              className="rounded-md bg-primary-500 px-4 py-2 text-sm font-semibold text-background-50 hover:bg-primary-600"
+              className="min-h-11 rounded-md bg-primary-500 px-4 py-2 text-sm font-semibold text-background-50 hover:bg-primary-600 md:min-h-0"
             >
               Ir a iniciar sesión
             </button>

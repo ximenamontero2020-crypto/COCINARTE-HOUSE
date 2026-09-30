@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Bot, MessageCircleMore, SendHorizontal, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -16,8 +16,37 @@ const welcomeMessage: ChatMessage = {
     'Hola 👋 Soy el asistente de COCINARTE HOUSE. Puedes preguntarme por el menú, precios, horarios, ubicación o el estado de la cafetería.',
 };
 
+/**
+ * En móvil, cuánto tapa el teclado virtual (vía visualViewport) y el alto visible que queda.
+ * El panel es `fixed`: scrollIntoView no lo mueve, así que hay que subirlo a mano. 0 en escritorio.
+ */
+function useKeyboardInset(active: boolean) {
+  const [inset, setInset] = useState({ bottom: 0, visibleHeight: 0 });
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!active || !viewport) return;
+    const mobile = window.matchMedia('(max-width: 767px)');
+    const update = () => {
+      const covered = window.innerHeight - viewport.height - viewport.offsetTop;
+      // Menos de 80px es la barra del navegador, no el teclado.
+      setInset({ bottom: mobile.matches && covered > 80 ? covered : 0, visibleHeight: viewport.height });
+    };
+    update();
+    viewport.addEventListener('resize', update);
+    viewport.addEventListener('scroll', update);
+    return () => {
+      viewport.removeEventListener('resize', update);
+      viewport.removeEventListener('scroll', update);
+    };
+  }, [active]);
+
+  return inset;
+}
+
 export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
+  const keyboard = useKeyboardInset(isOpen);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([welcomeMessage]);
@@ -78,7 +107,7 @@ export default function ChatbotWidget() {
   };
 
   return (
-    <div className="fixed bottom-5 right-5 z-50">
+    <div className="fixed bottom-5 right-5 z-50" style={keyboard.bottom ? { bottom: keyboard.bottom + 8 } : undefined}>
       {!isOpen && (
         <button
           type="button"
@@ -113,7 +142,11 @@ export default function ChatbotWidget() {
             </button>
           </div>
 
-          <div className="flex max-h-[440px] min-h-[300px] flex-col">
+          <div
+            className="flex max-h-[min(440px,calc(100dvh-9rem))] min-h-[min(300px,calc(100dvh-9rem))] flex-col"
+            // Con teclado abierto: cabe en lo visible (encabezado ~60px + márgenes).
+            style={keyboard.bottom ? { maxHeight: Math.max(140, keyboard.visibleHeight - 84), minHeight: 0 } : undefined}
+          >
             <div className="flex-1 space-y-3 overflow-y-auto bg-background-50 p-4">
               {messages.map((message) => {
                 const isAssistantMessage = message.role === 'assistant';

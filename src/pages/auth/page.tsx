@@ -166,7 +166,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-background-50 px-4 py-10">
+    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-background-50 px-4 pt-10 pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-10">
       <div
         className="pointer-events-none absolute inset-0 opacity-40"
         style={{
@@ -194,7 +194,7 @@ export default function AuthPage() {
                 setView('login');
                 setError('');
               }}
-              className={`flex-1 whitespace-nowrap rounded-full px-1 py-2 text-sm font-medium transition-colors ${
+              className={`min-h-11 flex-1 whitespace-nowrap rounded-full px-1 py-2 text-sm font-medium transition-colors md:min-h-0 ${
                 view === 'login'
                   ? 'bg-primary-500 text-background-50'
                   : 'text-foreground-600 hover:text-foreground-900'
@@ -208,7 +208,7 @@ export default function AuthPage() {
                 setView('register');
                 setError('');
               }}
-              className={`flex-1 whitespace-nowrap rounded-full px-1 py-2 text-sm font-medium transition-colors ${
+              className={`min-h-11 flex-1 whitespace-nowrap rounded-full px-1 py-2 text-sm font-medium transition-colors md:min-h-0 ${
                 view === 'register'
                   ? 'bg-primary-500 text-background-50'
                   : 'text-foreground-600 hover:text-foreground-900'
@@ -245,7 +245,7 @@ export default function AuthPage() {
                 setView('forgot');
                 setError('');
               }}
-              className="self-end text-sm font-medium text-primary-600 hover:text-primary-700"
+              className="min-h-11 self-end text-sm font-medium text-primary-600 hover:text-primary-700 md:min-h-0"
             >
               ¿Olvidaste tu contraseña?
             </button>

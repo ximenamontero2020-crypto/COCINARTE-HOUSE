@@ -31,7 +31,7 @@ export default function ProductDetailModal({ item, categoryTitle, inCart, onClos
       >
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 z-20 w-9 h-9 flex items-center justify-center rounded-full bg-background-50/90 backdrop-blur-sm text-foreground-700 hover:bg-background-100 transition-colors cursor-pointer whitespace-nowrap"
+          className="absolute top-3 right-3 z-20 w-11 h-11 md:w-9 md:h-9 flex items-center justify-center rounded-full bg-background-50/90 backdrop-blur-sm text-foreground-700 hover:bg-background-100 transition-colors cursor-pointer whitespace-nowrap"
           aria-label="Cerrar"
         >
           <i className="ri-close-line text-lg"></i>

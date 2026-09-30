@@ -193,7 +193,7 @@ export default function MenuSection() {
               <button
                 type="button"
                 onClick={() => setSelectedCategory('all')}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${selectedCategory === 'all' ? 'bg-primary-600 text-background-50 shadow-sm' : 'bg-background-50 text-foreground-700 hover:bg-primary-100 hover:text-primary-800'}`}
+                className={`min-h-11 rounded-full px-4 py-2 md:min-h-0 text-sm font-semibold transition-colors ${selectedCategory === 'all' ? 'bg-primary-600 text-background-50 shadow-sm' : 'bg-background-50 text-foreground-700 hover:bg-primary-100 hover:text-primary-800'}`}
               >
                 Todos
               </button>
@@ -202,7 +202,7 @@ export default function MenuSection() {
                   key={category.id}
                   type="button"
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition-colors ${selectedCategory === category.id ? 'bg-primary-600 text-background-50 shadow-sm' : 'bg-background-50 text-foreground-700 hover:bg-primary-100 hover:text-primary-800'}`}
+                  className={`min-h-11 rounded-full px-4 py-2 md:min-h-0 text-sm font-semibold whitespace-nowrap transition-colors ${selectedCategory === category.id ? 'bg-primary-600 text-background-50 shadow-sm' : 'bg-background-50 text-foreground-700 hover:bg-primary-100 hover:text-primary-800'}`}
                 >
                   {category.title}
                 </button>

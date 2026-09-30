@@ -43,20 +43,20 @@ export default function Navbar() {
       }`}
     >
       <nav className="mx-auto flex items-center justify-between px-4 md:px-6 h-16 md:h-20">
-        <a href="#hero" className="flex items-center gap-2 cursor-pointer">
-          <span className="w-9 h-9 flex items-center justify-center rounded-full bg-primary-500 text-background-50">
+        <a href="#hero" className="flex min-w-0 items-center gap-2 cursor-pointer">
+          <span className="w-9 h-9 shrink-0 flex items-center justify-center rounded-full bg-primary-500 text-background-50">
             <img src="https://static.readdy.ai/image/b443135844d971a5ec2a9ef47dead5a2/a9d3bd8a1f84223b3e47d1011b063586.png" alt="CocinArte" className="w-7 h-7 object-contain" />
           </span>
           <span
-            className={`font-heading font-extrabold text-lg tracking-tight whitespace-nowrap ${
+            className={`font-heading font-extrabold text-base sm:text-lg tracking-tight whitespace-nowrap max-[359px]:text-sm max-[359px]:leading-none ${
               scrolled ? 'text-foreground-950' : 'text-background-50'
             }`}
           >
-            COCINARTE <span className="text-accent-500">HOUSE</span>
+            COCINARTE <span className="text-accent-500 max-[359px]:block">HOUSE</span>
           </span>
         </a>
 
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden lg:flex items-center gap-5 xl:gap-8">
           {links.map((l) => (
             <a
               key={l.href}
@@ -72,7 +72,7 @@ export default function Navbar() {
           ))}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2 md:gap-3">
           <Link
             to="/checkout"
             className={`relative w-10 h-10 flex items-center justify-center rounded-full transition-colors cursor-pointer ${
@@ -146,7 +146,7 @@ export default function Navbar() {
 
           <button
             onClick={() => setOpen((v) => !v)}
-            className="md:hidden w-10 h-10 flex items-center justify-center rounded-lg cursor-pointer"
+            className="lg:hidden w-10 h-10 flex items-center justify-center rounded-lg cursor-pointer"
             aria-label="Abrir menú"
           >
             <i
@@ -161,7 +161,7 @@ export default function Navbar() {
       <CafeteriaNotice />
 
       {open && (
-        <div className="md:hidden px-4 pb-4 bg-background-50 border-b border-background-200/70">
+        <div className="lg:hidden px-4 md:px-6 pb-4 bg-background-50 border-b border-background-200/70">
           {links.map((l) => (
             <a
               key={l.href}

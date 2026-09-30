@@ -18,15 +18,15 @@ export default function DishQuickList({ items }: { items: QuickDish[] }) {
   const { addItem } = useCart();
 
   return (
-    <ul className="grid gap-3 md:grid-cols-3">
+    <ul className="grid grid-cols-1 gap-3 md:grid-cols-3">
       {items.map((item) => (
         <li key={item.id} className="flex items-center gap-3 rounded-2xl border border-background-200/70 bg-background-100 p-3">
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-background-50 text-2xl" aria-hidden="true">
             {item.emoji}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-foreground-950">{item.name}</p>
-            <p className="text-xs text-foreground-500">{item.category_title} · {formatPrice(parsePrice(item.price))}</p>
+            <p className="line-clamp-2 text-sm font-semibold text-foreground-950 md:line-clamp-1">{item.name}</p>
+            <p className="text-xs text-foreground-500">{item.category_title} · <span className="whitespace-nowrap">{formatPrice(parsePrice(item.price))}</span></p>
           </div>
           <button
             type="button"
@@ -45,7 +45,7 @@ export default function DishQuickList({ items }: { items: QuickDish[] }) {
               playFoley('success');
             }}
             aria-label={`Agregar ${item.name} al carrito`}
-            className="shrink-0 rounded-full bg-primary-500 px-4 py-2 text-xs font-bold text-background-50 transition-colors hover:bg-primary-600 cursor-pointer"
+            className="min-h-11 shrink-0 rounded-full bg-primary-500 px-4 py-2 text-xs md:min-h-0 font-bold text-background-50 transition-colors hover:bg-primary-600 cursor-pointer max-[359px]:px-3"
           >
             Agregar
           </button>

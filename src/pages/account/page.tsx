@@ -77,9 +77,9 @@ export default function AccountPage() {
   const initial = (name.trim() || user?.email?.charAt(0) || '?').charAt(0).toUpperCase();
 
   return (
-    <main className="min-h-screen bg-background-100 px-4 py-10 md:px-6 md:py-16">
+    <main className="min-h-screen bg-background-100 px-4 pt-10 pb-[calc(7rem+env(safe-area-inset-bottom))] md:px-6 md:py-16">
       <div className="mx-auto max-w-3xl">
-        <Link to="/" className="inline-flex items-center gap-2 text-sm font-semibold text-primary-700 hover:text-primary-800">
+        <Link to="/" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary-700 hover:text-primary-800 md:min-h-0">
           <i className="ri-arrow-left-line" />
           Volver al inicio
         </Link>
@@ -140,7 +140,7 @@ export default function AccountPage() {
 
             {(message || error) && <p className={`rounded-xl px-4 py-3 text-sm font-semibold ${error ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>{error ?? message}</p>}
 
-            <button type="button" onClick={() => void signOut()} className="w-fit text-sm font-semibold text-foreground-600 hover:text-red-700">
+            <button type="button" onClick={() => void signOut()} className="min-h-11 w-fit text-sm font-semibold text-foreground-600 hover:text-red-700 md:min-h-0">
               Cerrar sesión
             </button>
           </div>

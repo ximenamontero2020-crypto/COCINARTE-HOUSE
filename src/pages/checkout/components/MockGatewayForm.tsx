@@ -1,7 +1,14 @@
-import { useState } from 'react';
+import { useState, type FocusEvent } from 'react';
 import { formatPrice } from '@/utils/price';
 import { playFoley } from '@/hooks/useFoley';
 import { mockGateway, type PaymentGateway } from '@/lib/payments/mockGateway';
+
+/** En móvil, centra el campo enfocado cuando el teclado virtual ya abrió (no aplica en escritorio). */
+function centerOnMobile(event: FocusEvent<HTMLInputElement>) {
+  if (!window.matchMedia('(max-width: 767px)').matches) return;
+  const field = event.currentTarget;
+  window.setTimeout(() => field.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300);
+}
 
 /**
  * Pago con tarjeta en MODO DEMOSTRACIÓN: solo llama a gateway.charge (simulado). No crea
@@ -73,6 +80,7 @@ export default function MockGatewayForm({
           onChange={(e) => setName(e.target.value)}
           placeholder="Ej. Ana García"
           className={inputClass}
+          onFocus={centerOnMobile}
           disabled={processing}
         />
       </div>
@@ -88,6 +96,7 @@ export default function MockGatewayForm({
           onChange={(e) => handleNumber(e.target.value)}
           placeholder="1234 5678 9012 3456"
           className={inputClass}
+          onFocus={centerOnMobile}
           disabled={processing}
         />
       </div>
@@ -104,6 +113,7 @@ export default function MockGatewayForm({
             onChange={(e) => handleExpiry(e.target.value)}
             placeholder="MM/AA"
             className={inputClass}
+            onFocus={centerOnMobile}
             disabled={processing}
           />
         </div>
@@ -116,6 +126,7 @@ export default function MockGatewayForm({
             onChange={(e) => setCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
             placeholder="123"
             className={inputClass}
+            onFocus={centerOnMobile}
             disabled={processing}
           />
         </div>

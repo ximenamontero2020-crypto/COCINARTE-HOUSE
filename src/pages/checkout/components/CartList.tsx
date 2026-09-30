@@ -13,20 +13,20 @@ export default function CartList() {
 
       <ul className="mt-5 divide-y divide-background-200/70">
         {items.map((item) => (
-          <li key={item.key} className="py-4 flex gap-4 items-center">
+          <li key={item.key} className="py-4 flex flex-wrap gap-x-3 gap-y-2 items-center sm:flex-nowrap sm:gap-4">
             <span className="w-12 h-12 flex items-center justify-center rounded-xl bg-background-100 text-2xl shrink-0">
               {item.emoji}
             </span>
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 basis-[calc(100%-3.75rem)] sm:basis-auto">
               <p className="font-semibold text-foreground-950 text-sm">{item.name}</p>
               <p className="text-xs text-foreground-500">
                 {item.categoryTitle} · {formatPrice(item.priceValue)}
               </p>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="ml-auto flex items-center gap-1 sm:ml-0">
               <button
                 onClick={() => decrement(item.key)}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-background-100 text-foreground-700 hover:bg-background-200 transition-colors cursor-pointer"
+                className="w-11 h-11 md:w-8 md:h-8 flex items-center justify-center rounded-full bg-background-100 text-foreground-700 hover:bg-background-200 transition-colors cursor-pointer"
                 aria-label="Quitar uno"
               >
                 <i className="ri-subtract-line"></i>
@@ -36,7 +36,7 @@ export default function CartList() {
               </span>
               <button
                 onClick={() => increment(item.key)}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-background-100 text-foreground-700 hover:bg-background-200 transition-colors cursor-pointer"
+                className="w-11 h-11 md:w-8 md:h-8 flex items-center justify-center rounded-full bg-background-100 text-foreground-700 hover:bg-background-200 transition-colors cursor-pointer"
                 aria-label="Añadir uno"
               >
                 <i className="ri-add-line"></i>
@@ -44,7 +44,7 @@ export default function CartList() {
             </div>
             <button
               onClick={() => removeItem(item.key)}
-              className="w-8 h-8 flex items-center justify-center rounded-full text-foreground-400 hover:bg-background-100 hover:text-foreground-700 transition-colors cursor-pointer"
+              className="w-11 h-11 md:w-8 md:h-8 flex items-center justify-center rounded-full text-foreground-400 hover:bg-background-100 hover:text-foreground-700 transition-colors cursor-pointer"
               aria-label="Eliminar"
             >
               <i className="ri-delete-bin-6-line"></i>

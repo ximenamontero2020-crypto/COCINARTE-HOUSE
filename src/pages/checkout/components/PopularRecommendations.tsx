@@ -42,14 +42,14 @@ export default function PopularRecommendations() {
         <i className="ri-sparkling-2-line text-accent-700" aria-hidden="true" />
         <h3 id="popular-recommendations-title" className="font-heading text-base font-extrabold text-foreground-950">¿Te gustaría agregar...?</h3>
       </div>
-      <div className="mt-3 grid gap-2">
+      <div className="mt-3 grid grid-cols-1 gap-2">
         {available.map((product) => {
           const key = `${product.category_id}:${product.name}`;
           return (
             <div key={product.id} className="flex items-center gap-3 rounded-xl border border-accent-200/70 bg-background-50 px-3 py-2">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-100 text-lg">{product.emoji}</span>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-foreground-950">{product.name}</p>
+                <p className="line-clamp-2 text-sm font-semibold text-foreground-950 md:line-clamp-1">{product.name}</p>
                 <p className="text-xs text-foreground-500">{product.price}</p>
               </div>
               <button
@@ -65,7 +65,7 @@ export default function PopularRecommendations() {
                   emoji: product.emoji,
                   pagoEnCajaPermitido: product.pago_en_caja_permitido === true,
                 })}
-                className="rounded-full bg-primary-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-primary-700"
+                className="min-h-11 shrink-0 rounded-full bg-primary-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-primary-700 md:min-h-0"
               >
                 Agregar
               </button>

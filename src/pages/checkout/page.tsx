@@ -77,16 +77,16 @@ export default function Checkout() {
     <div className="min-h-screen bg-background-100">
       <header className="sticky top-0 z-40 bg-background-50/90 backdrop-blur-xl border-b border-background-200/70">
         <div className="mx-auto max-w-6xl px-4 md:px-6 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 cursor-pointer">
-            <span className="w-9 h-9 flex items-center justify-center rounded-full bg-primary-500 text-background-50">
+          <Link to="/" className="flex min-w-0 items-center gap-2 cursor-pointer">
+            <span className="w-9 h-9 shrink-0 flex items-center justify-center rounded-full bg-primary-500 text-background-50">
               <img
                 src="https://static.readdy.ai/image/b443135844d971a5ec2a9ef47dead5a2/b2f2a4a276ed34e9f864736fe1afd2e1.png"
                 alt="CocinArte"
                 className="w-6 h-6 object-contain"
               />
             </span>
-            <span className="font-heading font-extrabold text-lg text-foreground-950 whitespace-nowrap">
-              COCINARTE <span className="text-accent-500">HOUSE</span>
+            <span className="font-heading font-extrabold text-base sm:text-lg text-foreground-950 whitespace-nowrap max-[359px]:text-sm max-[359px]:leading-none">
+              COCINARTE <span className="text-accent-500 max-[359px]:block">HOUSE</span>
             </span>
           </Link>
           <Link
@@ -95,7 +95,7 @@ export default function Checkout() {
               e.preventDefault();
               goToMenu();
             }}
-            className="inline-flex items-center gap-2 text-sm font-medium text-foreground-600 hover:text-primary-600 transition-colors cursor-pointer whitespace-nowrap"
+            className="inline-flex min-h-11 shrink-0 items-center gap-2 text-sm font-medium text-foreground-600 hover:text-primary-600 transition-colors cursor-pointer whitespace-nowrap"
           >
             <i className="ri-arrow-left-line"></i>
             Volver al menú
@@ -103,7 +103,7 @@ export default function Checkout() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 md:px-6 py-10 md:py-14">
+      <main className="mx-auto max-w-6xl px-4 md:px-6 pt-10 pb-[calc(7rem+env(safe-area-inset-bottom))] md:py-14">
         {order ? (
           <SuccessScreen order={order} />
         ) : items.length === 0 ? (

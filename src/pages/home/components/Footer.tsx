@@ -13,7 +13,7 @@ const socials = [
 
 export default function Footer() {
   return (
-    <footer id="contacto" className="relative w-full bg-primary-800 text-background-50 px-4 md:px-6 py-16">
+    <footer id="contacto" className="relative w-full bg-primary-800 text-background-50 px-4 md:px-6 pt-16 pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-16">
       <div className="mx-auto max-w-6xl">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           <div>
@@ -77,7 +77,7 @@ export default function Footer() {
         <div className="mt-4 flex justify-center">
           <Link
             to="/staff/login"
-            className="inline-flex items-center gap-1 text-[10px] text-background-50/30 hover:text-background-50/70 transition-colors"
+            className="inline-flex min-h-11 items-center gap-1 px-3 md:min-h-0 md:px-0 text-[10px] text-background-50/30 hover:text-background-50/70 transition-colors"
           >
             <i className="ri-lock-line" aria-hidden="true"></i>
             Administración

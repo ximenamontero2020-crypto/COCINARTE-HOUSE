@@ -93,7 +93,8 @@ export default function DishCard({ category, recommendedItemIds }: { category: M
             </h3>
             <p className="mt-1 text-xs text-background-50/80 flex items-center gap-1.5">
               <i className="ri-cursor-line"></i>
-              Mueve el cursor para ver · clic para acercar
+              <span className="md:hidden">Toca para ver de cerca</span>
+              <span className="hidden md:inline">Mueve el cursor para ver · clic para acercar</span>
             </p>
           </div>
         </div>
@@ -135,7 +136,7 @@ export default function DishCard({ category, recommendedItemIds }: { category: M
                     className="flex-1 min-w-0 text-left cursor-pointer group/item"
                     aria-label={`Ver detalles de ${item.name}`}
                   >
-                    <div className="flex items-baseline justify-between gap-2">
+                    <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between sm:gap-2">
                       <h4 className="font-semibold text-foreground-950 text-sm md:text-base group-hover/item:text-primary-600 transition-colors">
                         {item.name}
                       </h4>
@@ -154,7 +155,7 @@ export default function DishCard({ category, recommendedItemIds }: { category: M
                   <button
                     type="button"
                     onClick={handleAdd}
-                    className={`shrink-0 w-9 h-9 flex items-center justify-center rounded-full transition-colors cursor-pointer whitespace-nowrap ${
+                    className={`shrink-0 w-11 h-11 md:w-9 md:h-9 flex items-center justify-center rounded-full transition-colors cursor-pointer whitespace-nowrap ${
                       inCart
                         ? 'bg-primary-500 text-background-50 hover:bg-primary-600'
                         : 'bg-background-100 text-primary-700 hover:bg-primary-100'
@@ -196,7 +197,7 @@ export default function DishCard({ category, recommendedItemIds }: { category: M
               </div>
               <button
                 onClick={handleClose}
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-background-100 text-foreground-700 hover:bg-background-200 transition-colors cursor-pointer whitespace-nowrap"
+                className="w-11 h-11 md:w-9 md:h-9 shrink-0 flex items-center justify-center rounded-full bg-background-100 text-foreground-700 hover:bg-background-200 transition-colors cursor-pointer whitespace-nowrap"
                 aria-label="Cerrar"
               >
                 <i className="ri-close-line text-lg"></i>
