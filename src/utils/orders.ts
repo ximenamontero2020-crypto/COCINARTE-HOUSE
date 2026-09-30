@@ -36,6 +36,36 @@ export async function crearComanda(items: CartItem[], metodo: PaymentMethod): Pr
 		throw new Error(error.message || 'No pudimos registrar tu pedido. Inténtalo de nuevo.');
 	}
 
+	return toComandaCreada(data);
+}
+
+export type DatosInvitado = { nombre: string; email: string };
+
+/**
+ * Pedido sin cuenta con la RPC create_guest_comanda: siempre 'caja' (efectivo al recoger) y
+ * solo productos listos. El servidor valida nombre, correo, precios y el límite de pedidos.
+ */
+export async function crearComandaInvitado(items: CartItem[], invitado: DatosInvitado): Promise<ComandaCreada> {
+	if (items.some((item) => item.menuItemId === undefined)) {
+		throw new Error('Algún platillo no se puede pedir en línea. Recarga el menú e inténtalo de nuevo.');
+	}
+
+	const p_items = items.map((item) => ({ menu_item_id: item.menuItemId, cantidad: item.quantity }));
+	const { data, error } = await supabase.rpc('create_guest_comanda', {
+		p_items,
+		p_nombre: invitado.nombre.trim(),
+		p_email: invitado.email.trim() || null,
+	});
+
+	if (error) {
+		console.error('Error creando comanda de invitado:', error);
+		throw new Error(error.message || 'No pudimos registrar tu pedido. Inténtalo de nuevo.');
+	}
+
+	return toComandaCreada(data);
+}
+
+function toComandaCreada(data: { id: number | string; numero_pedido: string; total: number | string; saldo: number | string | null }): ComandaCreada {
 	return {
 		id: data.id,
 		numero_pedido: data.numero_pedido,

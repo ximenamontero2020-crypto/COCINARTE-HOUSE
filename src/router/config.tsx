@@ -97,14 +97,8 @@ const routes: RouteObject[] = [
   },
   {
     path: "/checkout",
-    // TODO(guest): create_comanda exige auth.uid(). Si se decide permitir pedidos
-    // sin cuenta, hace falta una RPC para invitados (sin user_id, con límite de uso)
-    // antes de quitar este AuthGuard.
-    element: (
-      <AuthGuard>
-        <Checkout />
-      </AuthGuard>
-    ),
+    // Sin guard: se puede comprar como invitado (create_guest_comanda, solo pago en caja).
+    element: <Checkout />,
   },
   {
     path: "/account",

@@ -33,8 +33,13 @@ const METHOD_DETAIL: Record<
   },
 };
 
-export default function SuccessScreen({ order }: { order: OrderInfo }) {
+// Invitado: la tarjeta CocinArte requiere cuenta, así que el "pedir de verdad" es distinto.
+const PASARELA_HINT_GUEST =
+  'Esto fue una simulación: no se realizó ningún cobro y NO se envió ningún pedido a cocina. Para pedir de verdad sin cuenta, elige «Pagar en caja» (solo productos listos) o inicia sesión para usar tu tarjeta CocinArte.';
+
+export default function SuccessScreen({ order, isGuest = false }: { order: OrderInfo; isGuest?: boolean }) {
   const d = METHOD_DETAIL[order.method];
+  const hint = isGuest && order.method === 'pasarela' ? PASARELA_HINT_GUEST : d.hint;
 
   return (
     <div className="max-w-lg mx-auto text-center py-8">
@@ -58,6 +63,9 @@ export default function SuccessScreen({ order }: { order: OrderInfo }) {
             <p className="font-heading font-bold text-xl text-foreground-950">
               {order.method === 'pasarela' ? order.reference : order.orderNumber}
             </p>
+            {order.method !== 'pasarela' && order.guestName && (
+              <p className="text-xs text-foreground-500">A nombre de {order.guestName}</p>
+            )}
           </div>
         </div>
         <div className="mt-5 flex items-center justify-between border-t border-background-200/70 pt-4">
@@ -68,7 +76,7 @@ export default function SuccessScreen({ order }: { order: OrderInfo }) {
         </div>
         <p className="mt-4 text-sm text-foreground-600 flex items-start gap-2">
           <i className="ri-information-line mt-0.5 text-foreground-500"></i>
-          <span>{d.hint}</span>
+          <span>{hint}</span>
         </p>
       </div>
 
@@ -80,10 +88,26 @@ export default function SuccessScreen({ order }: { order: OrderInfo }) {
         Volver al menú
       </Link>
 
-      <div className="mt-10 text-left space-y-6">
-        <GranoVoladorGame />
-        <LluviaEspressoGame />
-      </div>
+      {/* Los juegos dan descuentos: son recompensa de cuenta. */}
+      {isGuest ? (
+        <div className="mt-10 rounded-2xl border border-primary-200 bg-primary-50 p-5 text-left">
+          <p className="text-sm font-semibold text-primary-800">¿Te late jugar por descuentos?</p>
+          <p className="mt-1 text-sm text-primary-900">
+            Con una cuenta (opcional) juegas y ganas descuentos, subes de nivel de membresía y puedes pedir platillos que se preparan al momento.
+          </p>
+          <Link
+            to="/auth"
+            className="mt-4 inline-flex min-h-11 items-center rounded-full bg-primary-600 px-4 text-sm font-semibold text-background-50 hover:bg-primary-700 transition-colors md:min-h-0 md:py-2"
+          >
+            Crear cuenta o iniciar sesión
+          </Link>
+        </div>
+      ) : (
+        <div className="mt-10 text-left space-y-6">
+          <GranoVoladorGame />
+          <LluviaEspressoGame />
+        </div>
+      )}
     </div>
   );
 }

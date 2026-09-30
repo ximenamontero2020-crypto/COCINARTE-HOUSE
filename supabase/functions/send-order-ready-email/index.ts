@@ -21,6 +21,9 @@ type OrderRequest = {
 type OrderRow = {
   id: string | number;
   user_id: string | null;
+  // Solo pedidos de invitado (create_guest_comanda): nombre y correo opcional.
+  cliente: string | null;
+  cliente_email: string | null;
   numero_pedido: string;
   total: number | string;
   estado: string;
@@ -74,7 +77,7 @@ if (!supabaseUrl || !serviceRoleKey || !gmailUser || !gmailPassword) {
 
     const { data: order, error: orderError } = await supabase
       .from('comandas')
-      .select('id, user_id, numero_pedido, total, estado')
+      .select('id, user_id, cliente, cliente_email, numero_pedido, total, estado')
       .eq('id', orderId)
       .maybeSingle<OrderRow>();
 
@@ -92,19 +95,25 @@ if (!supabaseUrl || !serviceRoleKey || !gmailUser || !gmailPassword) {
       return jsonResponse({ sent: false, reason: 'El pedido todavía no está listo.' });
     }
 
+    // Invitado: se avisa solo si dejó correo en el checkout.
+    let profile: ProfileRow | null;
     if (!order.user_id) {
-      return jsonResponse({ sent: false, reason: 'Pedido de invitado sin cuenta.' });
-    }
+      if (!order.cliente_email) {
+        return jsonResponse({ sent: false, reason: 'Pedido de invitado sin correo.' });
+      }
+      profile = { name: order.cliente, email: order.cliente_email };
+    } else {
+      const { data, error: profileError } = await supabase
+        .from('profiles')
+        .select('name, email')
+        .eq('id', order.user_id)
+        .maybeSingle<ProfileRow>();
 
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('name, email')
-      .eq('id', order.user_id)
-      .maybeSingle<ProfileRow>();
-
-    if (profileError) {
-      console.error('Error buscando perfil para notificación:', profileError);
-      return jsonResponse({ error: 'No se pudo consultar el perfil.' }, 500);
+      if (profileError) {
+        console.error('Error buscando perfil para notificación:', profileError);
+        return jsonResponse({ error: 'No se pudo consultar el perfil.' }, 500);
+      }
+      profile = data;
     }
 
     if (!profile?.email) {

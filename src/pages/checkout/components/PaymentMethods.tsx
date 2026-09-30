@@ -19,16 +19,25 @@ const METHODS: { id: PaymentMethod; label: string; desc: string; icon: string }[
 // cliente no llega, la comida se desperdicia. El servidor (create_comanda) aplica la misma regla.
 const CASH_BLOCKED_REASON =
   'Tu carrito tiene productos que se preparan al momento. Paga con tu tarjeta CocinArte o con tarjeta.';
+// Invitado: la Tarjeta CocinArte es de la cuenta, así que sin sesión solo queda el efectivo.
+const CASH_BLOCKED_REASON_GUEST =
+  'Tu carrito tiene productos que se preparan al momento. Sin cuenta solo puedes pedir productos listos; inicia sesión para pagarlos con tu Tarjeta CocinArte.';
+const CARD_GUEST_REASON = 'Inicia sesión para pagar con el saldo de tu tarjeta.';
 
 export default function PaymentMethods({
   onConfirm,
   onMockPaid,
   cashAllowed,
+  isGuest = false,
+  guestReady = false,
 }: {
   onConfirm: (method: 'cafeteria' | 'caja') => Promise<void>;
   // Solo muestra la pantalla de demostración: la pasarela nunca crea pedidos.
   onMockPaid: (reference: string) => void;
   cashAllowed: boolean;
+  // Sin sesión: no hay Tarjeta CocinArte y el pedido en caja pide nombre (GuestDetails).
+  isGuest?: boolean;
+  guestReady?: boolean;
 }) {
   const { total } = useCart();
   const [method, setMethod] = useState<PaymentMethod | null>(null);
@@ -64,7 +73,13 @@ export default function PaymentMethods({
       <div className="mt-5 grid gap-3">
         {METHODS.map((m) => {
           const active = method === m.id;
-          const disabled = m.id === 'caja' && !cashAllowed;
+          const reason =
+            m.id === 'caja' && !cashAllowed
+              ? isGuest ? CASH_BLOCKED_REASON_GUEST : CASH_BLOCKED_REASON
+              : m.id === 'cafeteria' && isGuest
+                ? CARD_GUEST_REASON
+                : null;
+          const disabled = reason !== null;
           return (
             <button
               key={m.id}
@@ -92,10 +107,10 @@ export default function PaymentMethods({
               <span className="flex-1">
                 <span className="block font-semibold text-foreground-950 text-sm">{m.label}</span>
                 <span className="block text-xs text-foreground-500">{m.desc}</span>
-                {disabled && (
+                {reason && (
                   <span className="mt-1 flex items-start gap-1 text-xs text-accent-700">
                     <i className="ri-information-line mt-px"></i>
-                    <span>{CASH_BLOCKED_REASON}</span>
+                    <span>{reason}</span>
                   </span>
                 )}
               </span>
@@ -121,6 +136,12 @@ export default function PaymentMethods({
       <div className="mt-5">
         {method === 'caja' && cashAllowed && (
           <div className="space-y-4">
+            {isGuest && !guestReady && (
+              <p className="text-sm text-accent-700 flex items-start gap-2">
+                <i className="ri-user-line mt-0.5"></i>
+                <span>Escribe tu nombre en «Tus datos» para confirmar el pedido.</span>
+              </p>
+            )}
             <p className="text-sm text-foreground-600 flex items-start gap-2">
               <i className="ri-information-line mt-0.5 text-foreground-500"></i>
               <span>Todos tus productos están listos: pagas en efectivo al recogerlos. No se hace ningún cargo en línea.</span>
@@ -128,9 +149,9 @@ export default function PaymentMethods({
             <button
               type="button"
               onClick={() => void confirm('caja')}
-              disabled={blocked}
+              disabled={blocked || (isGuest && !guestReady)}
               className={`w-full rounded-full py-3 font-semibold text-sm transition-colors whitespace-nowrap ${
-                blocked
+                blocked || (isGuest && !guestReady)
                   ? 'bg-background-200 text-foreground-400 cursor-not-allowed'
                   : 'bg-primary-500 text-background-50 hover:bg-primary-600 cursor-pointer'
               }`}

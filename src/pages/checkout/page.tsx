@@ -4,8 +4,11 @@ import { useCart } from '@/context/CartContext';
 import CartList from './components/CartList';
 import PaymentMethods from './components/PaymentMethods';
 import SuccessScreen from './components/SuccessScreen';
+import GuestDetails from './components/GuestDetails';
+import { datosInvitadoValidos } from './guest';
 import type { OrderInfo } from '@/pages/checkout/types';
-import { crearComanda } from '@/utils/orders';
+import { crearComanda, crearComandaInvitado, type DatosInvitado } from '@/utils/orders';
+import { useAuth } from '@/context/AuthContext';
 import { track } from '@/lib/analytics';
 import { supabase } from '@/lib/supabase';
 
@@ -13,12 +16,17 @@ export default function Checkout() {
   const { items, clear } = useCart();
   const navigate = useNavigate();
   const [order, setOrder] = useState<OrderInfo | null>(null);
+  const { session, loading: authLoading } = useAuth();
+  const isGuest = !authLoading && !session;
+  // Datos del invitado solo en memoria: no se guardan en el navegador.
+  const [guest, setGuest] = useState<DatosInvitado>({ nombre: '', email: '' });
 
-  // Si create_comanda falla, el error sube al panel de pago y no se confirma nada.
+  // Si la RPC falla, el error sube al panel de pago y no se confirma nada.
+  // Invitado: create_guest_comanda (siempre 'caja'); con sesión: create_comanda / tarjeta.
   const handleConfirm = async (method: 'cafeteria' | 'caja') => {
-    const comanda = await crearComanda(items, method);
-    track('place_order', { method, value: comanda.total, item_count: items.reduce((n, i) => n + i.quantity, 0) });
-    setOrder({ orderNumber: comanda.numero_pedido, method, total: comanda.total });
+    const comanda = isGuest ? await crearComandaInvitado(items, guest) : await crearComanda(items, method);
+    track('place_order', { method, guest: isGuest, value: comanda.total, item_count: items.reduce((n, i) => n + i.quantity, 0) });
+    setOrder({ orderNumber: comanda.numero_pedido, method, total: comanda.total, guestName: isGuest ? guest.nombre.trim() : undefined });
     clear();
   };
 
@@ -105,7 +113,7 @@ export default function Checkout() {
 
       <main className="mx-auto max-w-6xl px-4 md:px-6 pt-10 pb-[calc(7rem+env(safe-area-inset-bottom))] md:py-14">
         {order ? (
-          <SuccessScreen order={order} />
+          <SuccessScreen order={order} isGuest={isGuest} />
         ) : items.length === 0 ? (
           <div className="max-w-md mx-auto text-center py-16">
             <span className="mx-auto w-16 h-16 flex items-center justify-center rounded-full bg-background-100 text-foreground-400 text-3xl">
@@ -147,8 +155,21 @@ export default function Checkout() {
               <div className="lg:col-span-3">
                 <CartList />
               </div>
-              <div className="lg:col-span-2">
-                <PaymentMethods onConfirm={handleConfirm} onMockPaid={handleMockPaid} cashAllowed={cashAllowed} />
+              <div className="lg:col-span-2 space-y-5">
+                {authLoading ? (
+                  <p className="text-sm text-foreground-500">Cargando…</p>
+                ) : (
+                  <>
+                    {isGuest && <GuestDetails value={guest} onChange={setGuest} />}
+                    <PaymentMethods
+                      onConfirm={handleConfirm}
+                      onMockPaid={handleMockPaid}
+                      cashAllowed={cashAllowed}
+                      isGuest={isGuest}
+                      guestReady={datosInvitadoValidos(guest)}
+                    />
+                  </>
+                )}
               </div>
             </div>
           </>

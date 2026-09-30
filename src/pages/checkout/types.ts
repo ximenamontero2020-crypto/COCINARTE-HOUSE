@@ -13,6 +13,8 @@ export type OrderInfo =
       method: 'cafeteria' | 'caja';
       orderNumber: string;
       total: number;
+      // Solo pedidos de invitado: nombre con el que se recoge.
+      guestName?: string;
     }
   | {
       // Demostración: no hay número de pedido de BD porque no se creó nada.

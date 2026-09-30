@@ -25,12 +25,13 @@ Cafetería universitaria: landing + menú + carrito + checkout para clientes, y 
 
 ## Rutas
 - Públicas: `/`, `/auth`, `/auth/callback`, `/auth/reset-password`.
-- Con sesión (`AuthGuard`): `/checkout`, `/account`.
+- `/checkout` es público: sin sesión se compra como invitado (ver `create_guest_comanda`).
+- Con sesión (`AuthGuard`): `/account`.
 - Staff: `/staff/login` (sin guard). Con guard de rol en `StaffLayout`: `/staff` (hub), `/staff/cafeteria-status`, `/staff/almacen`, `/staff/proveedores`, `/staff/corte-caja`, `/staff/fun-facts`, `/staff/insights`, `/staff/pareto` (lazy, Recharts) y `/staff/auditoria` (solo admin).
 
 ## Supabase: tablas y RPCs clave
 - `profiles`: `role` ('customer' | 'staff' | 'admin'), `membership_level`, `membership_current_spend`.
-- `comandas`: pedidos. Se crean **solo** con `create_comanda(p_items, p_metodo_pago)`; el servidor calcula precios y total. Staff solo cambia `estado`: pendiente → listo | cancelado.
+- `comandas`: pedidos. Se crean **solo** por RPC: `create_comanda(p_items, p_metodo_pago)` con sesión, o `create_guest_comanda(p_items, p_nombre, p_email)` para invitados (solo rol `anon`, siempre `caja`, solo productos listos, `user_id` NULL, nombre en `cliente` y correo opcional en `cliente_email`, límite por IP en `private.guest_order_log`). El servidor calcula precios y total. Staff solo cambia `estado`: pendiente → listo | cancelado.
 - `menu_items`, `menu_categories`: menú (`price` es texto, p. ej. "MXN 85").
 - `cafeteria_status` (fila id=1): semáforo, `cerrado`, fila (`queue_count`, `wait_minutes`, `note`); historial en `cafeteria_status_history`. Si está cerrado, la BD rechaza pedidos.
 - Staff: `insumos` (stock = `cantidad_actual`, mínimo = `umbral_minimo`), `proveedores`, `insumo_proveedor`, `stock_alert_log`, `receta_platillo`, `cortes_caja`, `movimientos_efectivo`, `fun_facts`, `staff_audit_log`.
@@ -55,7 +56,7 @@ Cafetería universitaria: landing + menú + carrito + checkout para clientes, y 
 - Realtime: un canal por topic. Si varios componentes lo necesitan, compártelo como en `useCafeteriaStatus`.
 
 ## Prioridades P0 actuales
-1. Aplicar en orden las migraciones `20260923000000` → `20260924000008`. Después promover al primer admin y correr `supabase/tests/*.sql`. **Nada de SQL se ha probado aún en una base real.**
+1. Aplicar en orden las migraciones `20260923000000` → `20260924000011` (la 11 habilita el checkout de invitado: sin ella, los invitados ven el checkout pero el pedido falla) y redeployar `send-order-ready-email`. Después promover al primer admin y correr `supabase/tests/*.sql`. **Nada de SQL se ha probado aún en una base real.**
 2. Juegos → promos del servidor: pasar `usePromoLimit` a `claim_promo` / `get_my_promo` y agregar el campo de código en checkout (`preview_promo` + `apply_promo`). Hoy el descuento sigue viviendo en localStorage.
 3. Pantalla staff para `staff_recharge_card`. Sin ella, el saldo solo se recarga desde el SQL Editor.
 4. Alerta de stock: configurar `stock_alert_secret` en `private.app_config` y los secrets de la función (`STOCK_ALERT_SECRET`, `STOCK_ALERT_EMAILS`, `RESEND_API_KEY` o `GMAIL_*`), y redeployar `send-low-stock-email`.
